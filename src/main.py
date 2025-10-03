@@ -9,7 +9,6 @@ from time import perf_counter
 from src.graph import app as graph_app
 from typing import Optional
 
-# (Logging setup remains the same)
 def _setup_logging():
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -41,22 +40,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Model Definitions ---
 
 class GenerateRequest(BaseModel):
-    thread_id: str
+    session_id: str
     topic: str
     tone: Optional[str] = ""
-    length: Optional[str] = ""
+    length: Optional[int] = None
 
 class UserInputRequest(BaseModel):
-    thread_id: str
+    session_id: str
     user_feedback: str
     selected_outline_index: Optional[int] = None
 
 class GenerateResponse(BaseModel):
     status: str
-    thread_id: str
+    session_id: str
     current_stage: str
     keywords: Optional[str] = None
     articles: Optional[list] = None
@@ -65,19 +63,17 @@ class GenerateResponse(BaseModel):
     draft_article: Optional[dict] = None
     follow_up_question: Optional[str] = None
 
-# --- Helper to create response ---
 
-def _get_graph_response(thread_id: str) -> GenerateResponse:
+def _get_graph_response(session_id: str) -> GenerateResponse:
     """Helper to fetch the current state and format it as a GenerateResponse."""
-    config = {"configurable": {"thread_id": thread_id}}
+    config = {"configurable": {"thread_id": session_id}}
     st = graph_app.get_state(config)
     values = st.values
 
     current_stage = values.get("current_stage") or "start"
 
     return GenerateResponse(
-        status="ok",
-        thread_id=thread_id,
+        session_id=session_id,
         current_stage=current_stage,
         keywords=values.get("keywords"),
         articles=values.get("articles"),
@@ -87,7 +83,6 @@ def _get_graph_response(thread_id: str) -> GenerateResponse:
         follow_up_question=values.get("follow_up_question"),
     )
 
-# --- API Endpoints ---
 
 @app.post("/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
@@ -98,10 +93,10 @@ async def generate(req: GenerateRequest):
     - Returns: outlines_json with title and outlines
     """
     start = perf_counter()
-    config = {"configurable": {"thread_id": req.thread_id}}
+    config = {"configurable": {"thread_id": req.session_id}}
     
     logger.info("="*100)
-    logger.info("[API /generate] START | thread_id=%s", req.thread_id)
+    logger.info("[API /generate] START | session_id=%s", req.session_id)
     logger.info("[API /generate] Request - topic='%s', tone='%s', length='%s'", 
                 req.topic, req.tone, req.length)
     
@@ -112,7 +107,7 @@ async def generate(req: GenerateRequest):
         )
         duration_ms = int((perf_counter() - start) * 1000)
         
-        response = _get_graph_response(req.thread_id)
+        response = _get_graph_response(req.session_id)
         
         logger.info("[API /generate] Response - stage=%s, has_outlines=%s", 
                     response.current_stage, bool(response.outlines_json))
@@ -136,14 +131,13 @@ async def user_input(req: UserInputRequest):
     - Returns: draft_article (full article JSON) when workflow completes
     """
     start = perf_counter()
-    config = {"configurable": {"thread_id": req.thread_id}}
+    config = {"configurable": {"thread_id": req.session_id}}
 
     logger.info("="*100)
-    logger.info("[API /user_input] START | thread_id=%s", req.thread_id)
+    logger.info("[API /user_input] START | session_id=%s", req.session_id)
     logger.info("[API /user_input] Request - feedback='%s'", req.user_feedback)
 
     try:
-        # Pass the feedback into the graph and run it
         graph_app.invoke(
             {
                 "user_feedback": req.user_feedback,
@@ -152,7 +146,7 @@ async def user_input(req: UserInputRequest):
         )
         duration_ms = int((perf_counter() - start) * 1000)
         
-        response = _get_graph_response(req.thread_id)
+        response = _get_graph_response(req.session_id)
         
         logger.info("[API /user_input] Response - stage=%s, has_draft=%s", 
                     response.current_stage, bool(response.draft_article))

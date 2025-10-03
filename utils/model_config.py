@@ -15,6 +15,8 @@ def get_llm():
     logger.info(f"Initializing Google Generative AI LLM: model='gemini-2.5-flash'")
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
-        google_api_key=google_api_key
+        google_api_key=google_api_key,
+        temperature=0.6,
+        streaming=True,
     )
     return llm

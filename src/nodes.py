@@ -33,10 +33,6 @@ def _coerce_json(text: str) -> Dict[str, Any]:
             return {"text": text}
 
 
-def _trunc(s: str, n: int = 1200) -> str:
-    return s if len(s) <= n else s[:n] + "... [truncated]"
-
-
 def generate_keywords_node(state):
     """Node 1: Generate 3 keywords from topic using LLM"""
     logger.info("="*80)
@@ -57,7 +53,6 @@ def generate_keywords_node(state):
     logger.info("[NODE 1] LLM Response - Raw output:")
     logger.info(out.content)
     
-    # Parse JSON response
     parsed = _coerce_json(out.content)
     keywords_list = parsed.get("keywords", [])
     keywords_str = ", ".join(keywords_list) if isinstance(keywords_list, list) else str(keywords_list)
@@ -100,11 +95,9 @@ def search_articles_citations_node(state):
 
 
 def generate_outlines_node(state):
-    """Node 3: Generate article outline and title from web content"""
     logger.info("="*80)
     logger.info("[NODE 3 - GENERATE_OUTLINES] START")
     
-    # Check if we have user feedback for regeneration
     user_feedback = getattr(state, 'user_feedback', None)
     if user_feedback:
         logger.info("[NODE 3] Regenerating with user feedback: %s", user_feedback)
@@ -114,16 +107,21 @@ def generate_outlines_node(state):
     logger.info("[NODE 3] Input - keywords=%s", state.keywords)
     
     articles_text = "\n\n".join(
-        [f"Title: {a.get('title','')}\nURL: {a.get('url','')}\nContent: {a.get('content','')[:500]}..." 
+        [f"Title: {a.get('title','')}\nURL: {a.get('url','')}\nContent: {a.get('content','')}" 
          for a in articles]
     )
     
     prompt = ChatPromptTemplate.from_template(outlines_prompt.template)
     chain = prompt | llm
+    previous_outline = ""
+    if user_feedback and state.outlines_json:
+        previous_outline = json.dumps(state.outlines_json, indent=2, ensure_ascii=False)
+    
     prompt_vars = {
         "keywords": state.keywords, 
-        "articles": _trunc(articles_text, 3000),
-        "user_input": user_feedback if user_feedback else "None"
+        "articles": articles_text,
+        "user_input": user_feedback if user_feedback else "None",
+        "previous_outline": previous_outline
     }
     
     logger.info("[NODE 3] LLM Call - Full Prompt:")
@@ -136,25 +134,23 @@ def generate_outlines_node(state):
     
     parsed = _coerce_json(out.content)
     
-    logger.info("[NODE 3] Output - Parsed JSON:")
-    logger.info(json.dumps(parsed, indent=2, ensure_ascii=False))
+    logger.info("[NODE 3] Output - Parsed JSON keys: %s", list(parsed.keys()))
     
-    # Extract follow-up question
     follow_up = parsed.get("follow_up_question", "")
+    if isinstance(parsed, dict) and "follow_up_question" in parsed:
+        parsed.pop("follow_up_question", None)
     logger.info("[NODE 3] Output - follow_up_question=%s", follow_up)
     
     logger.info("[NODE 3 - GENERATE_OUTLINES] END")
     logger.info("="*80)
     
     return {
-        "outlines_json": parsed, 
-        "current_stage": "outlines", 
-        "user_feedback": "",
+        "outlines_json": parsed,
+        "current_stage": "outlines",
         "follow_up_question": follow_up
     }
 
 
-# --- ROUTER NODES ---
 
 def outline_router_node(state):
     """Node 4: Router node after outline generation - uses LLM to decide APPROVE or EDIT"""
@@ -165,7 +161,6 @@ def outline_router_node(state):
     logger.info("[NODE 4] Input - user_feedback='%s'", user_input)
     logger.info("[NODE 4] Input - current_stage='%s'", state.current_stage)
     
-    # Prepare context
     context = f"Generated outlines: {json.dumps(state.outlines_json, ensure_ascii=False)[:500]}"
     
     prompt = ChatPromptTemplate.from_template(router_prompt.template)
@@ -205,11 +200,9 @@ def outline_router_node(state):
 
 
 def write_sections_node(state):
-    """Node 5: Write full article using approved outline, tone, length, and web content"""
     logger.info("="*80)
     logger.info("[NODE 5 - WRITE_SECTIONS] START")
     
-    # Check if we have user feedback for regeneration
     user_feedback = getattr(state, 'user_feedback', None)
     if user_feedback:
         logger.info("[NODE 5] Regenerating with user feedback: %s", user_feedback)
@@ -221,7 +214,6 @@ def write_sections_node(state):
     logger.info("[NODE 5] Input - length='%s'", length)
     logger.info("[NODE 5] Input - keywords='%s'", state.keywords)
     
-    # Get approved outline
     outlines = state.outlines_json or {}
     outline_title = outlines.get("title", "")
     outline_sections = outlines.get("outlines", [])
@@ -230,22 +222,27 @@ def write_sections_node(state):
     logger.info("[NODE 5] Input - outline_title='%s'", outline_title)
     logger.info("[NODE 5] Input - outline sections count=%d", len(outline_sections))
     
-    # Prepare web content for citations
     articles = state.articles or []
     web_content = "\n\n".join(
-        [f"Source: {a.get('title', '')}\nURL: {a.get('url', '')}\nContent: {a.get('content', '')[:1000]}..." 
+        [f"Source: {a.get('title', '')}\nURL: {a.get('url', '')}\nContent: {a.get('content', '')}" 
          for a in articles]
     )
     
+    previous_draft = ""
+    if user_feedback and state.draft_article:
+        previous_draft = json.dumps(state.draft_article, indent=2, ensure_ascii=False)
+    
     prompt = ChatPromptTemplate.from_template(write_sections_prompt.template)
     chain = prompt | llm
+    
     prompt_vars = {
         "tone": tone,
         "length": length,
         "outline_title": outline_title,
         "outline_markdown": outline_markdown,
-        "web_content": _trunc(web_content, 3000),
-        "user_input": user_feedback if user_feedback else "None"
+        "web_content": web_content,
+        "user_input": user_feedback if user_feedback else "None",
+        "previous_draft": previous_draft
     }
     
     logger.info("[NODE 5] LLM Call - Full Prompt:")
@@ -256,13 +253,13 @@ def write_sections_node(state):
     logger.info("[NODE 5] LLM Response - Raw output:")
     logger.info(out.content[:2000] + ("..." if len(out.content) > 2000 else ""))
     
-    # Parse JSON response
     parsed = _coerce_json(out.content)
     
     logger.info("[NODE 5] Output - Parsed JSON keys: %s", list(parsed.keys()))
     
-    # Extract follow-up question
     follow_up = parsed.get("follow_up_question", "")
+    if isinstance(parsed, dict) and "follow_up_question" in parsed:
+        parsed.pop("follow_up_question", None)
     logger.info("[NODE 5] Output - follow_up_question=%s", follow_up)
     
     logger.info("[NODE 5 - WRITE_SECTIONS] END")
@@ -275,7 +272,6 @@ def write_sections_node(state):
         "follow_up_question": follow_up
     }
 
-
 def article_router_node(state):
     """Node 6: Router node after article generation - uses LLM to decide APPROVE or EDIT"""
     logger.info("="*80)
@@ -285,7 +281,6 @@ def article_router_node(state):
     logger.info("[NODE 6] Input - user_feedback='%s'", user_input)
     logger.info("[NODE 6] Input - current_stage='%s'", state.current_stage)
     
-    # Prepare context
     draft = state.draft_article or {}
     context = f"Generated article title: {draft.get('title', '')}, content length: {len(str(draft.get('content', '')))} chars"
     

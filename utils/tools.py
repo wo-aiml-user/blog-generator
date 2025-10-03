@@ -107,23 +107,17 @@ def search_articles_parallel(queries: List[str], max_results: int = 3) -> List[D
     Performs Tavily searches for a list of queries in parallel.
     """
     with ThreadPoolExecutor() as executor:
-        # Submit all search tasks
         futures = [executor.submit(search_articles, query, max_results) for query in queries]
-        
-        # Collect results as they complete
         all_results = []
         for future in futures:
             try:
                 all_results.extend(future.result())
             except Exception as e:
                 logger.error(f"A search query failed: {e}")
-    
-    # Simple de-duplication based on URL
     unique_articles = {article['url']: article for article in all_results}.values()
     return list(unique_articles)
 
 
-# Backward-compat shim (deprecated): returns (articles, []) and logs a warning
 def search_articles_and_citations(keywords: str) -> Tuple[List[Dict], List[Dict]]:
     logger.warning("search_articles_and_citations is deprecated; use search_articles instead.")
     articles = search_articles(keywords, max_results=5)
