@@ -25,7 +25,7 @@ outlines_prompt = PromptTemplate(
     input_variables=["keywords", "articles", "user_input", "previous_outline"],
     template="""You are an expert content strategist and editor.
 
-Your task is to create distinct and compelling article outlines based on a given topic, research articles, and user feedback.
+Your task is to create distinct and compelling article outlines based on a given topic, research articles, and user input.
 
 <keywords>
 {keywords}
@@ -52,10 +52,9 @@ Your task is to create distinct and compelling article outlines based on a given
  Formulate a single, direct follow-up question to confirm your interpretation.
 
 ## Modification Instructions (When user_input is present and previous_outline exists):
-- START WITH the previous_outline as your base.
+- start with the previous_outline as your base.
 - Your ONLY task is to apply the user's feedback to that previous version.
 - Read the 'user_input' to understand the specific change requested.
-- DO NOT alter, add, or remove any other information that was not explicitly mentioned in the user_input.
 
 ## Output :
 You MUST respond with ONLY valid JSON in this exact format:
@@ -74,6 +73,14 @@ write_sections_prompt = PromptTemplate(
     template="""You are an expert content writer and subject matter expert.
 
 Your task is to write a complete, high-quality article based on a provided outline, research materials, and specific instructions.
+
+<tone>
+{tone}
+</tone>
+
+<length>
+{length}
+</length>
 
 <outline_title>
 {outline_title}
@@ -105,11 +112,9 @@ Your task is to write a complete, high-quality article based on a provided outli
  Formulate a single, direct follow-up question to confirm your interpretation.
 
 ## Modification Instructions (When user_input is present and previous_draft exists):
-- START WITH the previous_draft as your base.
-- Your ONLY task is to apply the user's feedback to that previous version.
-- Read the 'user_input' to understand the specific change requested.
-- DO NOT alter, add, or remove any other information that was not explicitly mentioned in the user_input.
-- Keep the same title, structure, and content except for the specific change requested.
+- start with the previous_draft as your base.
+- your task is to apply the user's feedback to that previous version.
+- read the 'user_input' to understand the specific change requested.
  
 ## Output :
 You MUST respond with ONLY valid JSON in this exact format:

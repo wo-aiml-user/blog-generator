@@ -72,7 +72,7 @@ def search_articles_citations_node(state):
     kw_string = state.keywords or state.topic
     queries = [kw.strip() for kw in kw_string.split(',') if kw.strip()]
     
-    articles = search_articles_parallel(queries, max_results=2)
+    articles = search_articles_parallel(queries, max_results=1)
     
     return {
         "articles": articles,
@@ -89,19 +89,17 @@ def generate_outlines_node(state):
     if user_feedback:
         logger.info("[NODE 3] Regenerating with user feedback: %s", user_feedback)
     
-    # When user feedback is present, only use previous_outline and user_input
-    # Do NOT pass articles and keywords to avoid full regeneration
+
     if user_feedback and state.outlines_json:
         logger.info("[NODE 3] Mode: MODIFICATION (using only previous_outline + user_input)")
         previous_outline = json.dumps(state.outlines_json, indent=2, ensure_ascii=False)
         prompt_vars = {
-            "keywords": "",  # Empty when modifying
-            "articles": "",  # Empty when modifying
+            "keywords": "",  
+            "articles": "",
             "user_input": user_feedback,
             "previous_outline": previous_outline
         }
     else:
-        # Initial generation: use all context
         logger.info("[NODE 3] Mode: INITIAL GENERATION (using articles + keywords)")
         articles = state.articles or []
         logger.info("[NODE 3] Input - articles count=%d", len(articles))
@@ -205,25 +203,21 @@ def write_sections_node(state):
     if user_feedback:
         logger.info("[NODE 5] Regenerating with user feedback: %s", user_feedback)
     
-    tone = state.tone or "neutral"
-    length = state.length or "medium"
-    
-    # When user feedback is present, only use previous_draft and user_input
-    # Do NOT pass web_content, outline details to avoid full regeneration
+    tone = state.tone
+    length = state.length
     if user_feedback and state.draft_article:
         logger.info("[NODE 5] Mode: MODIFICATION (using only previous_draft + user_input)")
         previous_draft = json.dumps(state.draft_article, indent=2, ensure_ascii=False)
         prompt_vars = {
             "tone": tone,
             "length": length,
-            "outline_title": "",  # Empty when modifying
-            "outline_markdown": "",  # Empty when modifying
-            "web_content": "",  # Empty when modifying
+            "outline_title": "",
+            "outline_markdown": "",
+            "web_content": "",
             "user_input": user_feedback,
             "previous_draft": previous_draft
         }
     else:
-        # Initial generation: use all context
         logger.info("[NODE 5] Mode: INITIAL GENERATION (using outlines + web_content)")
         logger.info("[NODE 5] Input - tone='%s'", tone)
         logger.info("[NODE 5] Input - length='%s'", length)

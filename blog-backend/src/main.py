@@ -44,13 +44,12 @@ app.add_middleware(
 class GenerateRequest(BaseModel):
     session_id: str
     topic: str
-    tone: Optional[str] = ""
+    tone: Optional[str] = None
     length: Optional[int] = None
 
 class UserInputRequest(BaseModel):
     session_id: str
     user_feedback: str
-    selected_outline_index: Optional[int] = None
 
 class GenerateResponse(BaseModel):
     status: str
@@ -86,7 +85,7 @@ def _get_graph_response(session_id: str) -> GenerateResponse:
 
 
 @app.post("/generate", response_model=GenerateResponse)
-async def generate(req: GenerateRequest):
+def generate(req: GenerateRequest):
     """
     Endpoint 1: /generate
     - Takes: topic, tone, length
@@ -123,7 +122,7 @@ async def generate(req: GenerateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/user_input", response_model=GenerateResponse)
-async def user_input(req: UserInputRequest):
+def user_input(req: UserInputRequest):
     """
     Endpoint 2: /user_input
     - Takes: user_feedback (for router node decision)

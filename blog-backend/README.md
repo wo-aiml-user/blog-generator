@@ -6,7 +6,7 @@ An intelligent blog generation system that uses LangGraph workflows, LLM-based r
 
 - **6-Node Workflow**: Keywords → Search → Outlines → Router → Article → Router → Complete
 - **LLM-Based Routing**: Intelligent approval/edit decisions using natural language
-- **Parallel Web Search**: Simultaneous Tavily searches for multiple keywords
+- **Parallel Web Search**: Simultaneous Perplexity searches for multiple keywords
 - **JSON-Only Responses**: Structured, parseable outputs from all LLM calls
 - **Comprehensive Logging**: Full input/output logging for debugging and monitoring
 - **Stateful Workflows**: Thread-based state management with checkpointing
@@ -16,7 +16,7 @@ An intelligent blog generation system that uses LangGraph workflows, LLM-based r
 
 - Python 3.8+
 - Google Gemini API key
-- Tavily API key
+- Perplexity API key
 
 ## 🚀 Quick Start
 
@@ -28,7 +28,7 @@ An intelligent blog generation system that uses LangGraph workflows, LLM-based r
 2. **Set environment variables** in `.env`:
    ```
    GOOGLE_API_KEY=your_google_api_key
-   TAVILY_API_KEY=your_tavily_api_key
+   PERPLEXITY_API_KEY=your_perplexity_api_key
    ```
 
 3. **Start the server**:
@@ -163,7 +163,7 @@ bolg_generator/
 │   └── nodes.py         # Node implementations
 ├── utils/
 │   ├── prompts.py       # LLM prompts (all JSON-enforced)
-│   ├── tools.py         # Tavily search utilities
+│   ├── tools.py         # Perplexity search utilities
 │   └── model_config.py  # LLM configuration
 ├── logs/
 │   └── app.log          # Execution logs
@@ -179,7 +179,7 @@ bolg_generator/
 - **LangGraph**: Workflow orchestration
 - **LangChain**: LLM integration
 - **Google Gemini**: LLM provider
-- **Tavily**: Web search API
+- **Perplexity**: Web search API
 - **Pydantic**: Data validation
 
 ## 💡 Key Features Explained
