@@ -17,6 +17,5 @@ def get_llm():
         model="gemini-2.5-flash",
         google_api_key=google_api_key,
         temperature=0.6,
-        streaming=True,
     )
     return llm

@@ -18,7 +18,7 @@ def _get_tavily_client() -> "TavilyClient":
     return TavilyClient(api_key=api_key)
 
 
-def tavily_search(query: str, max_results: int = 5) -> List[Dict]:
+def tavily_search(query: str, max_results: int = 2) -> List[Dict]:
     logger.info("[TAVILY] query='%s' | max_results=%d", query, max_results)
     client = _get_tavily_client()
     resp = client.search(query=query, max_results=max_results)
@@ -51,7 +51,7 @@ def tavily_search(query: str, max_results: int = 5) -> List[Dict]:
     return results
 
 
-def tavily_advanced_search(query: str, max_results: int = 5) -> List[Dict]:
+def tavily_advanced_search(query: str, max_results: int = 2) -> List[Dict]:
     """
     Wrapper around TavilyClient.search using recommended params:
     - search_depth="advanced"
@@ -74,7 +74,7 @@ def tavily_advanced_search(query: str, max_results: int = 5) -> List[Dict]:
             {
                 "title": item.get("title") or "",
                 "url": item.get("url") or "",
-                "content": item.get("content") or item.get("snippet") or "",
+                "content": item.get("content"),
                 "score": item.get("score"),
                 "published_date": item.get("published_date") or item.get("date") or "",
                 "raw": item,
@@ -94,7 +94,7 @@ def tavily_advanced_search(query: str, max_results: int = 5) -> List[Dict]:
     )
     return results
 
-def search_articles(query: str, max_results: int = 5) -> List[Dict]:
+def search_articles(query: str, max_results: int = 2) -> List[Dict]:
     """
     Perform a single advanced Tavily search for the provided query/keywords and
     return up to max_results normalized items. No additional sorting is applied.
@@ -102,7 +102,7 @@ def search_articles(query: str, max_results: int = 5) -> List[Dict]:
     return tavily_advanced_search(query=query, max_results=max_results)
 
 
-def search_articles_parallel(queries: List[str], max_results: int = 3) -> List[Dict]:
+def search_articles_parallel(queries: List[str], max_results: int = 2) -> List[Dict]:
     """
     Performs Tavily searches for a list of queries in parallel.
     """
@@ -120,5 +120,5 @@ def search_articles_parallel(queries: List[str], max_results: int = 3) -> List[D
 
 def search_articles_and_citations(keywords: str) -> Tuple[List[Dict], List[Dict]]:
     logger.warning("search_articles_and_citations is deprecated; use search_articles instead.")
-    articles = search_articles(keywords, max_results=5)
+    articles = search_articles(keywords, max_results=2)
     return articles, []

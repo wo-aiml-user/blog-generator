@@ -73,6 +73,7 @@ def _get_graph_response(session_id: str) -> GenerateResponse:
     current_stage = values.get("current_stage") or "start"
 
     return GenerateResponse(
+        status="success",
         session_id=session_id,
         current_stage=current_stage,
         keywords=values.get("keywords"),

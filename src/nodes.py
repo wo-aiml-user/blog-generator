@@ -72,20 +72,7 @@ def search_articles_citations_node(state):
     kw_string = state.keywords or state.topic
     queries = [kw.strip() for kw in kw_string.split(',') if kw.strip()]
     
-    logger.info("[NODE 2] Input - keywords=%s", kw_string)
-    logger.info("[NODE 2] Parallel search queries=%s", queries)
-    
-    articles = search_articles_parallel(queries, max_results=3)
-    
-    logger.info("[NODE 2] Output - Total articles found=%d", len(articles))
-    for idx, article in enumerate(articles):
-        logger.info("[NODE 2] Article %d:", idx + 1)
-        logger.info("  - Title: %s", article.get("title", ""))
-        logger.info("  - URL: %s", article.get("url", ""))
-        logger.info("  - Content length: %d chars", len(article.get("content", "")))
-    
-    logger.info("[NODE 2 - SEARCH_ARTICLES] END")
-    logger.info("="*80)
+    articles = search_articles_parallel(queries, max_results=2)
     
     return {
         "articles": articles,
@@ -102,27 +89,38 @@ def generate_outlines_node(state):
     if user_feedback:
         logger.info("[NODE 3] Regenerating with user feedback: %s", user_feedback)
     
-    articles = state.articles or []
-    logger.info("[NODE 3] Input - articles count=%d", len(articles))
-    logger.info("[NODE 3] Input - keywords=%s", state.keywords)
-    
-    articles_text = "\n\n".join(
-        [f"Title: {a.get('title','')}\nURL: {a.get('url','')}\nContent: {a.get('content','')}" 
-         for a in articles]
-    )
+    # When user feedback is present, only use previous_outline and user_input
+    # Do NOT pass articles and keywords to avoid full regeneration
+    if user_feedback and state.outlines_json:
+        logger.info("[NODE 3] Mode: MODIFICATION (using only previous_outline + user_input)")
+        previous_outline = json.dumps(state.outlines_json, indent=2, ensure_ascii=False)
+        prompt_vars = {
+            "keywords": "",  # Empty when modifying
+            "articles": "",  # Empty when modifying
+            "user_input": user_feedback,
+            "previous_outline": previous_outline
+        }
+    else:
+        # Initial generation: use all context
+        logger.info("[NODE 3] Mode: INITIAL GENERATION (using articles + keywords)")
+        articles = state.articles or []
+        logger.info("[NODE 3] Input - articles count=%d", len(articles))
+        logger.info("[NODE 3] Input - keywords=%s", state.keywords)
+        
+        articles_text = "\n\n".join(
+            [f"Title: {a.get('title','')}\nContent: {a.get('content','')}" 
+             for a in articles]
+        )
+        
+        prompt_vars = {
+            "keywords": state.keywords, 
+            "articles": articles_text,
+            "user_input": "None",
+            "previous_outline": ""
+        }
     
     prompt = ChatPromptTemplate.from_template(outlines_prompt.template)
     chain = prompt | llm
-    previous_outline = ""
-    if user_feedback and state.outlines_json:
-        previous_outline = json.dumps(state.outlines_json, indent=2, ensure_ascii=False)
-    
-    prompt_vars = {
-        "keywords": state.keywords, 
-        "articles": articles_text,
-        "user_input": user_feedback if user_feedback else "None",
-        "previous_outline": previous_outline
-    }
     
     logger.info("[NODE 3] LLM Call - Full Prompt:")
     logger.info(outlines_prompt.template.format(**prompt_vars))
@@ -161,7 +159,7 @@ def outline_router_node(state):
     logger.info("[NODE 4] Input - user_feedback='%s'", user_input)
     logger.info("[NODE 4] Input - current_stage='%s'", state.current_stage)
     
-    context = f"Generated outlines: {json.dumps(state.outlines_json, ensure_ascii=False)[:500]}"
+    context = f"Generated outlines: {json.dumps(state.outlines_json, ensure_ascii=False)}"
     
     prompt = ChatPromptTemplate.from_template(router_prompt.template)
     chain = prompt | llm
@@ -210,40 +208,53 @@ def write_sections_node(state):
     tone = state.tone or "neutral"
     length = state.length or "medium"
     
-    logger.info("[NODE 5] Input - tone='%s'", tone)
-    logger.info("[NODE 5] Input - length='%s'", length)
-    logger.info("[NODE 5] Input - keywords='%s'", state.keywords)
-    
-    outlines = state.outlines_json or {}
-    outline_title = outlines.get("title", "")
-    outline_sections = outlines.get("outlines", [])
-    outline_markdown = "\n".join([f"## {s.get('section', '')}\n{s.get('description', '')}" for s in outline_sections])
-    
-    logger.info("[NODE 5] Input - outline_title='%s'", outline_title)
-    logger.info("[NODE 5] Input - outline sections count=%d", len(outline_sections))
-    
-    articles = state.articles or []
-    web_content = "\n\n".join(
-        [f"Source: {a.get('title', '')}\nURL: {a.get('url', '')}\nContent: {a.get('content', '')}" 
-         for a in articles]
-    )
-    
-    previous_draft = ""
+    # When user feedback is present, only use previous_draft and user_input
+    # Do NOT pass web_content, outline details to avoid full regeneration
     if user_feedback and state.draft_article:
+        logger.info("[NODE 5] Mode: MODIFICATION (using only previous_draft + user_input)")
         previous_draft = json.dumps(state.draft_article, indent=2, ensure_ascii=False)
+        prompt_vars = {
+            "tone": tone,
+            "length": length,
+            "outline_title": "",  # Empty when modifying
+            "outline_markdown": "",  # Empty when modifying
+            "web_content": "",  # Empty when modifying
+            "user_input": user_feedback,
+            "previous_draft": previous_draft
+        }
+    else:
+        # Initial generation: use all context
+        logger.info("[NODE 5] Mode: INITIAL GENERATION (using outlines + web_content)")
+        logger.info("[NODE 5] Input - tone='%s'", tone)
+        logger.info("[NODE 5] Input - length='%s'", length)
+        logger.info("[NODE 5] Input - keywords='%s'", state.keywords)
+        
+        outlines = state.outlines_json or {}
+        outline_title = outlines.get("title", "")
+        outline_sections = outlines.get("outlines", [])
+        outline_markdown = "\n".join([f"## {s.get('section', '')}\n{s.get('description', '')}" for s in outline_sections])
+        
+        logger.info("[NODE 5] Input - outline_title='%s'", outline_title)
+        logger.info("[NODE 5] Input - outline sections count=%d", len(outline_sections))
+        
+        articles = state.articles or []
+        web_content = "\n\n".join(
+            [f"Source: {a.get('title', '')}\nURL: {a.get('url', '')}\nContent: {a.get('content', '')}" 
+             for a in articles]
+        )
+        
+        prompt_vars = {
+            "tone": tone,
+            "length": length,
+            "outline_title": outline_title,
+            "outline_markdown": outline_markdown,
+            "web_content": web_content,
+            "user_input": "None",
+            "previous_draft": ""
+        }
     
     prompt = ChatPromptTemplate.from_template(write_sections_prompt.template)
     chain = prompt | llm
-    
-    prompt_vars = {
-        "tone": tone,
-        "length": length,
-        "outline_title": outline_title,
-        "outline_markdown": outline_markdown,
-        "web_content": web_content,
-        "user_input": user_feedback if user_feedback else "None",
-        "previous_draft": previous_draft
-    }
     
     logger.info("[NODE 5] LLM Call - Full Prompt:")
     logger.info(write_sections_prompt.template.format(**prompt_vars))
@@ -281,8 +292,8 @@ def article_router_node(state):
     logger.info("[NODE 6] Input - user_feedback='%s'", user_input)
     logger.info("[NODE 6] Input - current_stage='%s'", state.current_stage)
     
-    draft = state.draft_article or {}
-    context = f"Generated article title: {draft.get('title', '')}, content length: {len(str(draft.get('content', '')))} chars"
+    context = json.dumps(state.draft_article or {}, ensure_ascii=False)
+    logger.info("[NODE 6] Input - context='%s'", context)
     
     prompt = ChatPromptTemplate.from_template(router_prompt.template)
     chain = prompt | llm

@@ -18,9 +18,7 @@ Given a topic, your task is to generate a concise list of high-impact keywords r
 
 Output :
 You MUST respond with ONLY valid JSON in this exact format:
-{{"keywords": ["keyword1", "keyword2", "keyword3"]}}
-
-No commentary, no markdown code blocks, no additional text. Only the JSON object."""
+{{"keywords": ["keyword1", "keyword2", "keyword3"]}}"""
 )
 
 outlines_prompt = PromptTemplate(
@@ -41,6 +39,10 @@ Your task is to create distinct and compelling article outlines based on a given
 {previous_outline}
 </previous_outline>
 
+<user_input>
+{user_input}
+</user_input>
+
 ## Instructions:
  Analyze the provided keywords to understand the core SEO goals.
  Review the content from the articles to identify key themes, data points, and arguments.
@@ -53,8 +55,7 @@ Your task is to create distinct and compelling article outlines based on a given
 - START WITH the previous_outline as your base.
 - Your ONLY task is to apply the user's feedback to that previous version.
 - Read the 'user_input' to understand the specific change requested.
-- DO NOT alter, add, or remove any other information that was not explicitly mentioned in the feedback.
-- If user says "remove Conclusion section", simply remove that section from the outlines array.
+- DO NOT alter, add, or remove any other information that was not explicitly mentioned in the user_input.
 
 ## Output :
 You MUST respond with ONLY valid JSON in this exact format:
@@ -65,9 +66,7 @@ You MUST respond with ONLY valid JSON in this exact format:
     {{"section": "Main Point 1", "description": "Brief description"}}
   ],
   "follow_up_question": "A single, direct question to confirm your interpretation"
-}}
-
-No commentary, no markdown code blocks, no additional text. Only the JSON object."""
+}}"""
 )
 
 write_sections_prompt = PromptTemplate(
@@ -92,6 +91,11 @@ Your task is to write a complete, high-quality article based on a provided outli
 {previous_draft}
 </previous_draft>
 
+<user_input>
+{user_input}
+</user_input>
+
+
 ## Instructions:
  Adhere strictly to the approved article title 'outline_title' and the structure defined in the 'outline_markdown'.
  Adopt the specified 'tone' and aim for the target 'length'.
@@ -104,9 +108,8 @@ Your task is to write a complete, high-quality article based on a provided outli
 - START WITH the previous_draft as your base.
 - Your ONLY task is to apply the user's feedback to that previous version.
 - Read the 'user_input' to understand the specific change requested.
-- DO NOT alter, add, or remove any other information that was not explicitly mentioned in the feedback.
+- DO NOT alter, add, or remove any other information that was not explicitly mentioned in the user_input.
 - Keep the same title, structure, and content except for the specific change requested.
-- For example, if user says "make introduction shorter", only modify the introduction section.
  
 ## Output :
 You MUST respond with ONLY valid JSON in this exact format:
@@ -118,9 +121,7 @@ You MUST respond with ONLY valid JSON in this exact format:
     {{"title": "Another Source", "url": "https://example2.com", "relevance": "Brief description"}}
   ],
   "follow_up_question": "A single, direct question to confirm your interpretation"
-}}
-
-Do not include any commentary, markdown code blocks around the JSON, or any text outside the JSON object."""
+}}"""
 )
 
 router_prompt = PromptTemplate(
@@ -152,7 +153,5 @@ You MUST respond with ONLY valid JSON in this exact format:
 {{
   "action": "APPROVE or EDIT",
   "feedback": "user's original input if EDIT, empty string if APPROVE"
-}}
-
-No commentary, no markdown code blocks, no additional text. Only the JSON object."""
+}}"""
 )
