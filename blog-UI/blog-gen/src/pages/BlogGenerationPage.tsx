@@ -1,0 +1,272 @@
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Zap, Send, Loader2, FileText, CheckCircle2, Home } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import BlogForm from '../components/BlogForm';
+import ChatInterface from '../components/ChatInterface';
+import ContentDisplay from '../components/ContentDisplay';
+
+type Stage = 'form' | 'outlines' | 'draft';
+
+interface OutlineSection {
+  section: string;
+  description: string;
+}
+
+interface Outlines {
+  title: string;
+  outlines: OutlineSection[];
+}
+
+interface Citation {
+  title: string;
+  url: string;
+  relevance: string;
+}
+
+interface DraftArticle {
+  title: string;
+  content: string;
+  citations: Citation[];
+}
+
+export default function BlogGenerationPage() {
+  const navigate = useNavigate();
+  const [stage, setStage] = useState<Stage>('form');
+  const [sessionId, setSessionId] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [outlines, setOutlines] = useState<Outlines | null>(null);
+  const [draftArticle, setDraftArticle] = useState<DraftArticle | null>(null);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; time: string }>>([]);
+  const [userInput, setUserInput] = useState('');
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setSessionId(id);
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  const getCurrentTime = () => {
+    return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const handleGenerate = async (topic: string, tone: string, length: number) => {
+    setLoading(true);
+    setStage('outlines');
+    setCurrentStep(1);
+    setStatusMessage('Generating outlines...');
+
+    try {
+      const response = await fetch('http://localhost:5000/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          topic,
+          tone,
+          length,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate outlines');
+      }
+
+      const data = await response.json();
+      console.log('Generate API Response:', data);
+
+      if (data.outlines_json) {
+        setOutlines(data.outlines_json);
+        setFollowUpQuestion(data.follow_up_question || '');
+        setStatusMessage('Step 1: Outlines Generated');
+
+        const sectionCount = data.outlines_json.outlines?.length || 0;
+        setChatMessages([{
+          role: 'ai',
+          content: `Great! I've created an outline for your blog post about "${topic}" with a ${tone.toLowerCase()} tone.\n\nThe structure includes ${sectionCount} main sections.\n\n${data.follow_up_question || 'Would you like to proceed with this outline?'}`,
+          time: getCurrentTime(),
+        }]);
+      } else {
+        throw new Error('No outlines generated');
+      }
+    } catch (error) {
+      console.error('Error generating outlines:', error);
+      setStatusMessage('Error generating outlines. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUserSubmit = async () => {
+    if (!userInput.trim() || loading) return;
+
+    const userMessage = userInput.trim();
+    setUserInput('');
+
+    setChatMessages(prev => [...prev, {
+      role: 'user',
+      content: userMessage,
+      time: getCurrentTime(),
+    }]);
+
+    setLoading(true);
+    setStatusMessage('Generating draft article...');
+
+    try {
+      const response = await fetch('http://localhost:5000/user_input', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_feedback: userMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process user input');
+      }
+
+      const data = await response.json();
+      console.log('User Input API Response:', data);
+
+      // Check if we got a draft article
+      if (data.draft_article) {
+        setStage('draft');
+        setCurrentStep(2);
+        setDraftArticle(data.draft_article);
+        setFollowUpQuestion(data.follow_up_question || '');
+        setStatusMessage('Step 2: Draft Generated');
+
+        setChatMessages(prev => [...prev, {
+          role: 'ai',
+          content: `Perfect! I've generated your complete blog post based on your feedback. The article includes:\n\n✓ Comprehensive introduction and conclusion\n✓ Detailed sections covering all key topics\n✓ Practical examples and insights\n✓ Professional tone\n✓ Supporting citations and references\n\n${data.follow_up_question || 'Is there anything you would like to modify?'}`,
+          time: getCurrentTime(),
+        }]);
+      } else if (data.outlines_json) {
+        // Outline was modified, update it
+        setOutlines(data.outlines_json);
+        setFollowUpQuestion(data.follow_up_question || '');
+        setStatusMessage('Outline Updated');
+
+        setChatMessages(prev => [...prev, {
+          role: 'ai',
+          content: `I've updated the outline based on your feedback.\n\n${data.follow_up_question || 'Would you like to proceed with this updated outline?'}`,
+          time: getCurrentTime(),
+        }]);
+      }
+    } catch (error) {
+      console.error('Error processing user input:', error);
+      setStatusMessage('Error generating draft. Please try again.');
+      setChatMessages(prev => [...prev, {
+        role: 'ai',
+        content: 'Sorry, there was an error generating the draft. Please try again.',
+        time: getCurrentTime(),
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Zap className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">AI Blog Writer</h1>
+              <p className="text-xs text-slate-500">Intelligent Content Creation</p>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </button>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Create Blog
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">AI Blog Writer</h2>
+          <p className="text-slate-600">Create engaging blog posts with the power of artificial intelligence</p>
+        </div>
+
+        <div className="flex items-center justify-center gap-8 mb-8">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+              {currentStep > 1 ? <CheckCircle2 className="w-5 h-5" /> : '1'}
+            </div>
+            <span className={`font-medium ${currentStep >= 1 ? 'text-slate-900' : 'text-slate-500'}`}>Getting Started</span>
+          </div>
+
+          <div className={`h-0.5 w-20 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+              {currentStep > 2 ? <CheckCircle2 className="w-5 h-5" /> : '2'}
+            </div>
+            <span className={`font-medium ${currentStep >= 2 ? 'text-slate-900' : 'text-slate-500'}`}>Generating Content</span>
+          </div>
+
+          <div className={`h-0.5 w-20 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+              3
+            </div>
+            <span className={`font-medium ${currentStep >= 3 ? 'text-slate-900' : 'text-slate-500'}`}>Review & Refine</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[400px,1fr] gap-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            {stage === 'form' ? (
+              <BlogForm onGenerate={handleGenerate} loading={loading} />
+            ) : (
+              <ChatInterface
+                messages={chatMessages}
+                statusMessage={statusMessage}
+                loading={loading}
+                userInput={userInput}
+                onInputChange={setUserInput}
+                onSubmit={handleUserSubmit}
+                chatEndRef={chatEndRef}
+              />
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 min-h-[600px]">
+            <ContentDisplay
+              stage={stage}
+              loading={loading}
+              outlines={outlines}
+              draftArticle={draftArticle}
+            />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
