@@ -52,7 +52,7 @@ export default function ChatInterface({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
         {messages.map((message, index) => (
           <div
             key={index}

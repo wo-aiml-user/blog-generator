@@ -240,8 +240,8 @@ export default function BlogGenerationPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[400px,1fr] gap-6">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="grid grid-cols-[600px,1fr] gap-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-[700px] flex flex-col">
             {stage === 'form' ? (
               <BlogForm onGenerate={handleGenerate} loading={loading} />
             ) : (
@@ -257,7 +257,7 @@ export default function BlogGenerationPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 min-h-[600px]">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 h-[700px] overflow-y-auto">
             <ContentDisplay
               stage={stage}
               loading={loading}
