@@ -40,6 +40,7 @@ def generate_keywords_node(state):
     logger.info("[NODE 1] Input - topic='%s'", state.topic)
     logger.info("[NODE 1] Input - tone='%s'", state.tone)
     logger.info("[NODE 1] Input - length='%s'", state.length)
+    logger.info("[NODE 1] Input - target_audience='%s'", state.target_audience)
     
     prompt = ChatPromptTemplate.from_template(keyword_prompt.template)
     chain = prompt | llm
@@ -59,20 +60,24 @@ def generate_keywords_node(state):
     
     logger.info("[NODE 1] Output - keywords=%s", keywords_str)
     logger.info("[NODE 1 - GENERATE_KEYWORDS] END")
-    logger.info("="*80)
     
     return {"keywords": keywords_str, "current_stage": "keywords"}
 
 
 def search_articles_citations_node(state):
-    """Node 2: Search web articles in parallel for each keyword"""
+    """Node 2: Search web articles for each keyword (keywords-only mode)"""
     logger.info("="*80)
     logger.info("[NODE 2 - SEARCH_ARTICLES] START")
     
+    # Use keywords only
     kw_string = state.keywords or state.topic
     queries = [kw.strip() for kw in kw_string.split(',') if kw.strip()]
     
     articles = search_articles_parallel(queries, max_results=1)
+    
+    logger.info("[NODE 2] Retrieved %d articles", len(articles))
+    logger.info("[NODE 2 - SEARCH_ARTICLES] END")
+    logger.info("="*80)
     
     return {
         "articles": articles,
@@ -93,18 +98,22 @@ def generate_outlines_node(state):
     if user_feedback and state.outlines_json:
         logger.info("[NODE 3] Mode: MODIFICATION (using only previous_outline + user_input)")
         previous_outline = json.dumps(state.outlines_json, indent=2, ensure_ascii=False)
+        if getattr(state, 'num_outlines', None) is None:
+            logger.error("[NODE 3] Missing required num_outlines in state for modification mode")
+            raise ValueError("num_outlines is required")
         prompt_vars = {
             "keywords": "",  
             "articles": "",
             "user_input": user_feedback,
-            "previous_outline": previous_outline
+            "previous_outline": previous_outline,
+            "num_outlines": state.num_outlines,
         }
     else:
         logger.info("[NODE 3] Mode: INITIAL GENERATION (using articles + keywords)")
         articles = state.articles or []
         logger.info("[NODE 3] Input - articles count=%d", len(articles))
         logger.info("[NODE 3] Input - keywords=%s", state.keywords)
-        
+        logger.info("[NODE 3] Input - num_outlines=%s", getattr(state, 'num_outlines', None))
         articles_text = "\n\n".join(
             [f"Title: {a.get('title','')}\nContent: {a.get('content','')}" 
              for a in articles]
@@ -114,7 +123,8 @@ def generate_outlines_node(state):
             "keywords": state.keywords, 
             "articles": articles_text,
             "user_input": "None",
-            "previous_outline": ""
+            "previous_outline": "",
+            "num_outlines": state.num_outlines,
         }
     
     prompt = ChatPromptTemplate.from_template(outlines_prompt.template)
@@ -205,12 +215,14 @@ def write_sections_node(state):
     
     tone = state.tone
     length = state.length
+    target_audience = state.target_audience
     if user_feedback and state.draft_article:
         logger.info("[NODE 5] Mode: MODIFICATION (using only previous_draft + user_input)")
         previous_draft = json.dumps(state.draft_article, indent=2, ensure_ascii=False)
         prompt_vars = {
             "tone": tone,
             "length": length,
+            "target_audience": target_audience,
             "outline_title": "",
             "outline_markdown": "",
             "web_content": "",
@@ -221,6 +233,7 @@ def write_sections_node(state):
         logger.info("[NODE 5] Mode: INITIAL GENERATION (using outlines + web_content)")
         logger.info("[NODE 5] Input - tone='%s'", tone)
         logger.info("[NODE 5] Input - length='%s'", length)
+        logger.info("[NODE 5] Input - target_audience='%s'", target_audience)
         logger.info("[NODE 5] Input - keywords='%s'", state.keywords)
         
         outlines = state.outlines_json or {}
@@ -240,6 +253,7 @@ def write_sections_node(state):
         prompt_vars = {
             "tone": tone,
             "length": length,
+            "target_audience": target_audience,
             "outline_title": outline_title,
             "outline_markdown": outline_markdown,
             "web_content": web_content,

@@ -20,6 +20,8 @@ class State(BaseModel):
     topic: Optional[str] = ""
     tone: Optional[str] = ""
     length: Optional[int] = None
+    num_outlines: Optional[int] = None
+    target_audience: Optional[str] = ""
     user_feedback: Optional[str] = ""
     keywords: Optional[str] = ""
     articles: Optional[List[Dict[str, Any]]] = None

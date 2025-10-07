@@ -2,14 +2,10 @@ from langchain.prompts import PromptTemplate
 
 keyword_prompt = PromptTemplate(
     input_variables=["topic"],
-    template="""You are a seasoned marketing director with 10+ years of SEO expertise.
-
-Task:
+    template="""You are a marketing director with 10+ years of SEO expertise.
 Given a topic, your task is to generate a concise list of high-impact keywords ready for article discovery and content creation.
 
-<topic>
-{topic}
-</topic>
+<topic>{topic}</topic>
 
 ## Guidelines:
 - Analyze the provided topic.
@@ -21,112 +17,161 @@ You MUST respond with ONLY valid JSON in this exact format:
 {{"keywords": ["keyword1", "keyword2", "keyword3"]}}"""
 )
 
+
 outlines_prompt = PromptTemplate(
-    input_variables=["keywords", "articles", "user_input", "previous_outline"],
-    template="""You are an expert content strategist and editor.
+    input_variables=["keywords", "articles", "user_input", "previous_outline", "num_outlines"],
+    template="""You are a content strategist who creates article structures that engage readers from start to finish.
+Your task is to create clear, engaging article outlines using the provided keywords, articles, and user input.
 
-Your task is to create distinct and compelling article outlines based on a given topic, research articles, and user input.
+<keywords>{keywords}</keywords>
 
-<keywords>
-{keywords}
-</keywords>
+<articles>{articles}</articles>
 
-<articles>
-{articles}
-</articles>
+<previous_outline>{previous_outline}</previous_outline>
 
-<previous_outline>
-{previous_outline}
-</previous_outline>
+<user_input>{user_input}</user_input>
 
-<user_input>
-{user_input}
-</user_input>
+Build your outline in {num_outlines} clear sections that follow the Natural Progression:
+  1. **The Hook** – Capture attention right away. Introduce the reader's problem or desire and why it matters now.
+  2. **The Recognition** – Reveal what's truly happening beneath the surface. Help readers see the real issue.
+  3. **The Proof** – Present data, examples, or evidence that confirm your insight.
+  4. **The Insight** – Offer a fresh, thought-provoking perspective that reframes understanding.
+  5. **The Path Forward** – Show readers a clear, actionable framework or next step.
+  6. **The Conclusion (Momentum)** – End with clarity, summarizing key takeaways and motivating action.
 
-## Instructions:
- Analyze the provided keywords to understand the core SEO goals.
- Review the content from the articles to identify key themes, data points, and arguments.
- Synthesize this information to generate a main article title and unique outlines.
- Each outline should propose a different angle or structure for the article.
- Each section within an outline should have a clear title 'section' and a brief 'description' of its content.
- Formulate a single, direct follow-up question to confirm your interpretation.
+Article Structure:
+The outline must map to this flow: Introduction → Main Body → Conclusion
+- **Introduction** = The Hook (section 1)
+- **Main Body** = Recognition, Proof, Insight, Path Forward (sections 2-5)
+- **Conclusion** = Momentum (section 6)
 
-## Modification Instructions (When user_input is present and previous_outline exists):
-- start with the previous_outline as your base.
-- Your ONLY task is to apply the user's feedback to that previous version.
-- Read the 'user_input' to understand the specific change requested.
+Formatting Requirements:
+- Keep the outline simple and sequential (Hook → Recognition → Proof → Insight → Path Forward → Conclusion).
+- Each section must have a short, engaging title and a 1–2 sentence description.
+- The flow should feel natural, with each section answering the question raised by the previous one.
+- Total sections should be between five and six.
 
-## Output :
+Instructions:
+- Use the keywords to understand what readers are searching for
+- Study the articles to find compelling angles and supporting evidence
+- Create one main title that captures the core promise or revelation
+- Develop an outline with 5-6 sections that follow the natural progression above
+- Each section needs a compelling title and 1-2 sentence description
+- The section titles should feel natural and engaging, not formulaic
+- Formulate a single, direct follow-up question to confirm your interpretation. The question should make it clear that the user can either approve the summary to proceed or provide feedback to refine it.
+
+When modifying (if user_input and previous_outline exist):
+- Start with the previous outline
+- Apply user feedback exactly as requested
+- Maintain the natural flow and reader journey
+- Adjust sections to better serve the progression
+
 You MUST respond with ONLY valid JSON in this exact format:
 {{
-  "title": "Main Article Title",
+  "title": "Main Article Title That Promises Specific Value",
   "outlines": [
-    {{"section": "Introduction", "description": "Brief description"}},
-    {{"section": "Main Point 1", "description": "Brief description"}}
+    {{
+      "section": "Introduction: [Engaging Hook Title]",
+      "description": "What this section covers and how it connects with the reader"
+    }},
+    {{
+      "section": "[Recognition Section Title]",
+      "description": "Reveals the real issue beneath the surface"
+    }},
+    {{
+      "section": "[Proof Section Title]",
+      "description": "Presents data and evidence"
+    }},
+    {{
+      "section": "[Insight Section Title]",
+      "description": "Offers fresh perspective"
+    }},
+    {{
+      "section": "[Path Forward Section Title]",
+      "description": "Shows actionable framework"
+    }},
+    {{
+      "section": "Conclusion: [Momentum Title]",
+      "description": "Summarizes and motivates action"
+    }}
   ],
-  "follow_up_question": "A single, direct question to confirm your interpretation"
-}}"""
+  "follow_up_question": "Does this article structure and flow match your expectations, or would you like any section adjusted?"
+}}
+
+"""
 )
 
 write_sections_prompt = PromptTemplate(
-    input_variables=["tone", "length", "outline_title", "outline_markdown", "web_content", "user_input", "previous_draft"],
-    template="""You are an expert content writer and subject matter expert.
+    input_variables=["tone", "length", "target_audience", "outline_title", "outline_markdown", "web_content", "user_input", "previous_draft"],
+    template="""You are a professional content writer who turns complex ideas into clear, engaging articles.
 
-Your task is to write a complete, high-quality article based on a provided outline, research materials, and specific instructions.
+Most articles are either too complicated or too shallow. Readers need content that is both easy to understand and valuable.
+Your task is to write a complete, ready-to-publish article based on the outline and research provided.
+Create articles that combine clarity, authority, and reader connection.
 
-<tone>
-{tone}
-</tone>
+<tone>{tone}</tone>
 
-<length>
-{length}
-</length>
+<length>{length}</length>
 
-<outline_title>
-{outline_title}
-</outline_title>
+<target_audience>{target_audience}</target_audience>
 
-<outline_markdown>
-{outline_markdown}
-</outline_markdown>
+<outline_title>{outline_title}</outline_title>
 
-<web_content>
-{web_content}
-</web_content>
+<outline_markdown>{outline_markdown}</outline_markdown>
 
-<previous_draft>
-{previous_draft}
-</previous_draft>
+<web_content>{web_content}</web_content>
 
-<user_input>
-{user_input}
-</user_input>
+<previous_draft>{previous_draft}</previous_draft>
+
+<user_input>{user_input}</user_input>
+
+Article Structure:
+Your article MUST follow this exact flow: Introduction → Main Body → Conclusion
+
+The outline provides 5-6 sections that map to this structure:
+- **Introduction** = Hook (first section from outline)
+- **Main Body** = Recognition, Proof, Insight, Path Forward (middle sections from outline)
+- **Conclusion** = Momentum (last section from outline)  
+
+Writing Guide
+- **Hook**: Start strong—relatable scenario, fact, or question. Promise transformation in 150–250 words.  
+- **Main Body**: Reveal, prove, and clarify insights naturally; each section should flow into the next.  
+- **Conclusion**: End with momentum and clear takeaways.
+
+Instructions:
+- Follow the outline_title and structure from outline_markdown exactly
+- Use the section titles from the outline as ## headings
+- Match the requested tone and length exactly
+- Write specifically for the target_audience, adjusting complexity, examples, and language to their level
+- Use web_content for accurate facts integrate them naturally
+- Ensure smooth transitions between sections
+- The article should read as one cohesive narrative with natural momentum from start to finish
+- Formulate a single, direct follow-up question to confirm your interpretation. The question should make it clear that the user can either approve the summary to proceed or provide feedback to refine it.
+
+Formatting Standards:
+- Use markdown: # for title, ## for main sections, ### for subsections if needed
+- Bold key insights, important statistics, or takeaway phrases
+- Use bullet points for lists, steps, or multiple examples
+- NO inline citations or URLs in the article body (citations go in separate JSON field)
 
 
-## Instructions:
- Adhere strictly to the approved article title 'outline_title' and the structure defined in the 'outline_markdown'.
- Adopt the specified 'tone' and aim for the target 'length'.
- Use information from the 'web_content' to support your points, but DO NOT include inline citations or links in the content.
- Keep the content clean and readable - all source references should be listed separately in the citations array.
- The final article content must be well-structured, engaging, and formatted using standard markdown (e.g., # for titles, ## for sections, lists, bolding).
- Formulate a single, direct follow-up question to confirm your interpretation.
+When modifying (if user_input and previous_draft exist):
+- Start with previous_draft as the foundation
+- Make only the specific changes the user requested
+- Keep everything else consistent in quality, tone, and flow
+- Don't rebuild what's already working
 
-## Modification Instructions (When user_input is present and previous_draft exists):
-- start with the previous_draft as your base.
-- your task is to apply the user's feedback to that previous version.
-- read the 'user_input' to understand the specific change requested.
- 
-## Output :
 You MUST respond with ONLY valid JSON in this exact format:
 {{
   "title": "Article Title",
-  "content": "Full article content in clean markdown format without any inline citations or URLs",
+  "content": "Full article content in clean markdown format without any inline citations or URLs. Start with # title, then ## Introduction (The Hook), then follow all Main Body sections from the outline with ## headings (Recognition, Proof, Insight, Path Forward), and end with ## Conclusion (Momentum). The flow should naturally progress from hooking the reader → revealing the problem → building evidence → providing insight → offering solutions → creating momentum for action.",
   "citations": [
-    {{"title": "Source Title", "url": "https://example.com", "relevance": "Brief description of what information was used from this source"}},
-    {{"title": "Another Source", "url": "https://example2.com", "relevance": "Brief description"}}
+    {{"title": "Source Title", "url": "https://example.com", "relevance": "Specific information or data used from this source"}},
+    {{"title": "Another Source", "url": "https://example2.com", "relevance": "How this source contributed to the article"}}
   ],
   "follow_up_question": "A single, direct question to confirm your interpretation"
-}}"""
+}}
+"""
 )
 
 router_prompt = PromptTemplate(

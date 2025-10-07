@@ -46,6 +46,8 @@ class GenerateRequest(BaseModel):
     topic: str
     tone: Optional[str] = None
     length: Optional[int] = None
+    num_outlines: Optional[int] = None
+    target_audience: Optional[str] = None
 
 class UserInputRequest(BaseModel):
     session_id: str
@@ -97,12 +99,18 @@ def generate(req: GenerateRequest):
     
     logger.info("="*100)
     logger.info("[API /generate] START | session_id=%s", req.session_id)
-    logger.info("[API /generate] Request - topic='%s', tone='%s', length='%s'", 
-                req.topic, req.tone, req.length)
+    logger.info("[API /generate] Request - topic='%s', tone='%s', length='%s', num_outlines='%s', target_audience='%s'", 
+                req.topic, req.tone, req.length, req.num_outlines, req.target_audience)
     
     try:
         graph_app.invoke(
-            {"topic": req.topic, "tone": req.tone, "length": req.length},
+            {
+                "topic": req.topic,
+                "tone": req.tone,
+                "length": req.length,
+                "num_outlines": req.num_outlines,
+                "target_audience": req.target_audience,
+            },
             config=config,
         )
         duration_ms = int((perf_counter() - start) * 1000)
