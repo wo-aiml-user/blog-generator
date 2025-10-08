@@ -31,73 +31,48 @@ Your task is to create clear, engaging article outlines using the provided keywo
 
 <user_input>{user_input}</user_input>
 
-Build your outline in {num_outlines} clear sections that follow the Natural Progression:
-  1. **The Hook** – Capture attention right away. Introduce the reader's problem or desire and why it matters now.
-  2. **The Recognition** – Reveal what's truly happening beneath the surface. Help readers see the real issue.
-  3. **The Proof** – Present data, examples, or evidence that confirm your insight.
-  4. **The Insight** – Offer a fresh, thought-provoking perspective that reframes understanding.
-  5. **The Path Forward** – Show readers a clear, actionable framework or next step.
-  6. **The Conclusion (Momentum)** – End with clarity, summarizing key takeaways and motivating action.
+You MUST create EXACTLY {num_outlines} sections. Count carefully and ensure your outline contains precisely {num_outlines} sections.
+
+Natural Progression Framework:
+  **The Hook** – Capture attention right away. Introduce the reader's problem or desire and why it matters now.
+  **The Recognition** – Reveal what's truly happening beneath the surface. Help readers see the real issue.
+  **The Proof** – Present data, examples, or evidence that confirm your insight.
+  **The Insight** – Offer a fresh, thought-provoking perspective that reframes understanding.
+  **The Path Forward** – Show readers a clear, actionable framework or next step.
+  **The Conclusion (Momentum)** – End with clarity, summarizing key takeaways and motivating action.
 
 Article Structure:
-The outline must map to this flow: Introduction → Main Body → Conclusion
-- **Introduction** = The Hook (section 1)
-- **Main Body** = Recognition, Proof, Insight, Path Forward (sections 2-5)
-- **Conclusion** = Momentum (section 6)
-
-Formatting Requirements:
-- Keep the outline simple and sequential (Hook → Recognition → Proof → Insight → Path Forward → Conclusion).
-- Each section must have a short, engaging title and a 1–2 sentence description.
-- The flow should feel natural, with each section answering the question raised by the previous one.
-- Total sections should be between five and six.
+The outline must follow this flow: Introduction → Main Body → Conclusion
+- **Introduction** = The Hook
+- **Main Body** = Recognition, Proof, Insight, Path Forward
+- **Conclusion** = Momentum
 
 Instructions:
 - Use the keywords to understand what readers are searching for
 - Study the articles to find compelling angles and supporting evidence
 - Create one main title that captures the core promise or revelation
-- Develop an outline with 5-6 sections that follow the natural progression above
+- Create EXACTLY {num_outlines} sections following the natural progression framework
+- Distribute the 6 framework elements (Hook, Recognition, Proof, Insight, Path Forward, Conclusion) across your {num_outlines} sections intelligently
 - Each section needs a compelling title and 1-2 sentence description
 - The section titles should feel natural and engaging, not formulaic
-- Formulate a single, direct follow-up question to confirm your interpretation. The question should make it clear that the user can either approve the summary to proceed or provide feedback to refine it.
+- Formulate a single, direct follow-up question to confirm your interpretation
 
 When modifying (if user_input and previous_outline exist):
 - Start with the previous outline
 - Apply user feedback exactly as requested
+- Maintain EXACTLY {num_outlines} sections
 - Maintain the natural flow and reader journey
-- Adjust sections to better serve the progression
 
 You MUST respond with ONLY valid JSON in this exact format:
 {{
   "title": "Main Article Title That Promises Specific Value",
   "outlines": [
-    {{
-      "section": "Introduction: [Engaging Hook Title]",
-      "description": "What this section covers and how it connects with the reader"
-    }},
-    {{
-      "section": "[Recognition Section Title]",
-      "description": "Reveals the real issue beneath the surface"
-    }},
-    {{
-      "section": "[Proof Section Title]",
-      "description": "Presents data and evidence"
-    }},
-    {{
-      "section": "[Insight Section Title]",
-      "description": "Offers fresh perspective"
-    }},
-    {{
-      "section": "[Path Forward Section Title]",
-      "description": "Shows actionable framework"
-    }},
-    {{
-      "section": "Conclusion: [Momentum Title]",
-      "description": "Summarizes and motivates action"
-    }}
+    {{"section": "Section 1 Title", "description": "Description"}},
+    {{"section": "Section 2 Title", "description": "Description"}},
+    ... (continue for EXACTLY {num_outlines} sections total)
   ],
   "follow_up_question": "Does this article structure and flow match your expectations, or would you like any section adjusted?"
 }}
-
 """
 )
 
@@ -127,14 +102,13 @@ Create articles that combine clarity, authority, and reader connection.
 
 Article Structure:
 Your article MUST follow this exact flow: Introduction → Main Body → Conclusion
+Map provided outlines to this structure:
+- **Introduction** = Hook
+- **Main Body** = Recognition, Proof, Insight, Path Forward
+- **Conclusion** = Momentum
 
-The outline provides 5-6 sections that map to this structure:
-- **Introduction** = Hook (first section from outline)
-- **Main Body** = Recognition, Proof, Insight, Path Forward (middle sections from outline)
-- **Conclusion** = Momentum (last section from outline)  
-
-Writing Guide
-- **Hook**: Start strong—relatable scenario, fact, or question. Promise transformation in 150–250 words.  
+Writing Guide:
+- **Hook**: Start strong—relatable scenario, fact, or question. Promise transformation in 100–150 words.  
 - **Main Body**: Reveal, prove, and clarify insights naturally; each section should flow into the next.  
 - **Conclusion**: End with momentum and clear takeaways.
 

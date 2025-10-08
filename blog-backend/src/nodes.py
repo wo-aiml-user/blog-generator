@@ -69,7 +69,6 @@ def search_articles_citations_node(state):
     logger.info("="*80)
     logger.info("[NODE 2 - SEARCH_ARTICLES] START")
     
-    # Use keywords only
     kw_string = state.keywords or state.topic
     queries = [kw.strip() for kw in kw_string.split(',') if kw.strip()]
     
