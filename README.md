@@ -2,23 +2,14 @@
 
 An intelligent blog generation system that uses LangGraph workflows, LLM-based routing, and parallel web research to create high-quality, well-researched articles.
 
-## 🌟 Features
 
-- **6-Node Workflow**: Keywords → Search → Outlines → Router → Article → Router → Complete
-- **LLM-Based Routing**: Intelligent approval/edit decisions using natural language
-- **Parallel Web Search**: Simultaneous Perplexity searches for multiple keywords
-- **JSON-Only Responses**: Structured, parseable outputs from all LLM calls
-- **Comprehensive Logging**: Full input/output logging for debugging and monitoring
-- **Stateful Workflows**: Thread-based state management with checkpointing
-- **Citation Support**: Automatic source citations in generated articles
-
-## 📋 Requirements
+## Requirements
 
 - Python 3.8+
 - Google Gemini API key
 - Perplexity API key
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Install dependencies**:
    ```bash
@@ -41,13 +32,7 @@ An intelligent blog generation system that uses LangGraph workflows, LLM-based r
    python test_workflow.py
    ```
 
-## 📚 Documentation
-
-- **[QUICK_START.md](QUICK_START.md)** - Get started in 5 minutes
-- **[WORKFLOW.md](WORKFLOW.md)** - Complete workflow documentation
-- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
-
-## 🔄 Workflow Overview
+## Workflow Overview
 
 ```
 POST /generate (topic, tone, length)
@@ -75,7 +60,7 @@ Node 4: Router (LLM decides APPROVE or EDIT)
          └─ APPROVE → END (Complete)
 ```
 
-## 🎯 API Endpoints
+## API Endpoints
 
 ### POST /generate
 Generate article outlines from a topic.
@@ -86,23 +71,32 @@ Generate article outlines from a topic.
   "thread_id": "unique-session-id",
   "topic": "AI in Healthcare",
   "tone": "professional",
-  "length": "medium"
+  "length": "medium",
+  "target_audience": "student",
+  "num_outlines": "5"
 }
 ```
 
 **Response**:
 ```json
 {
-  "status": "ok",
-  "current_stage": "outlines",
-  "keywords": "AI diagnostics, machine learning healthcare, patient care AI",
-  "outlines_json": {
-    "title": "The Future of AI in Healthcare",
-    "outlines": [
-      {"section": "Introduction", "description": "Overview of AI in healthcare"},
-      {"section": "AI in Diagnostics", "description": "How AI improves diagnosis"}
-    ]
-  }
+    "status": "success",
+    "session_id": "th-1",
+    "current_stage": "outlines",
+    "keywords": "AI transformation strategies tech industry 2025, ...",
+    "articles": [
+        { "title": "2025 AI Business Predictions - PwC", ... }
+    ],
+    "citations": [],
+    "outlines_json": {
+        "title": "AI 2025: A Tech Industry Blueprint for...",
+        "outlines": [
+            { "section": "The Strategic Imperative...", "description": "..." },
+            ...
+        ]
+    },
+    "draft_article": null,
+    "follow_up_question": "Do these outlines effectively cover the strategic, workforce, and growth sector aspects...?"
 }
 ```
 
@@ -120,27 +114,33 @@ Provide feedback to continue the workflow.
 **Response** (after article generation):
 ```json
 {
-  "status": "ok",
-  "current_stage": "draft",
-  "draft_article": {
-    "title": "The Future of AI in Healthcare",
-    "content": "# The Future of AI in Healthcare\n\n## Introduction\n..."
-  }
+    "status": "success",
+    "session_id": "th-1",
+    "current_stage": "draft",
+    "keywords": "AI-powered early disease detection systems, ...",
+    "articles": [
+        { "title": "Leveraging AI for early detection...", ... }
+    ],
+    "citations": [],
+    "outlines_json": {
+        "title": "The AI Revolution in Healthcare...",
+        "outlines": [
+            { "section": "Introduction", "description": "..." },
+            ...
+        ]
+    },
+    "draft_article": {
+        "title": "The AI Revolution in Healthcare...",
+        "content": "# The AI Revolution in Healthcare...",
+        "citations": [
+            { "title": "Leveraging AI for early detection...", "url": "...", "relevance": "..." }
+        ]
+    },
+    "follow_up_question": "You asked to remove the 'Conclusion' section; I have done that. Is there anything else you would like to modify?"
 }
 ```
 
-## 🔍 Logging
-
-All execution details are logged to `logs/app.log`:
-
-- Node inputs and outputs
-- Full LLM prompts
-- Raw LLM responses
-- Routing decisions
-- API request/response details
-- Error traces
-
-## 🧪 Testing
+## Testing
 
 Run the automated test suite:
 
@@ -148,12 +148,7 @@ Run the automated test suite:
 python test_workflow.py
 ```
 
-Tests include:
-1. Complete happy path (approve all)
-2. Edit outlines scenario
-3. Edit article scenario
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 bolg_generator/
@@ -173,7 +168,7 @@ bolg_generator/
 └── README.md            # This file
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **FastAPI**: REST API server
 - **LangGraph**: Workflow orchestration
@@ -182,47 +177,3 @@ bolg_generator/
 - **Perplexity**: Web search API
 - **Pydantic**: Data validation
 
-## 💡 Key Features Explained
-
-### JSON-Only LLM Responses
-All prompts enforce strict JSON output with no markdown code blocks, ensuring reliable parsing.
-
-### LLM-Based Routing
-Router nodes use the LLM to understand natural language feedback and decide whether to approve or request edits.
-
-### Parallel Web Search
-Multiple keywords are searched simultaneously using ThreadPoolExecutor for faster research.
-
-### Context Management
-Tone, length, and web content are preserved throughout the workflow for consistent article generation.
-
-### Comprehensive Logging
-Every node logs:
-- All inputs
-- Full LLM prompts
-- Raw LLM responses
-- Parsed outputs
-- Execution time
-
-## 🤝 Contributing
-
-This is a production-ready blog generator. To extend:
-
-1. Add new nodes in `src/nodes.py`
-2. Update workflow in `src/graph.py`
-3. Add prompts in `utils/prompts.py`
-4. Test with `test_workflow.py`
-
-## 📝 License
-
-MIT License
-
-## 🙋 Support
-
-Check the logs at `logs/app.log` for detailed debugging information.
-
----
-
-**Status**: ✅ Production Ready
-
-**Last Updated**: 2025-10-01
