@@ -57,7 +57,7 @@ export default function BlogGenerationPage() {
     return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
-  const handleGenerate = async (topic: string, tone: string, length: number) => {
+  const handleGenerate = async (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number, sourceUrl: string) => {
     setLoading(true);
     setStage('outlines');
     setCurrentStep(1);
@@ -74,6 +74,9 @@ export default function BlogGenerationPage() {
           topic,
           tone,
           length,
+          target_audience: targetAudience,
+          num_outlines: numOutlines,
+          source_url: sourceUrl,
         }),
       });
 
@@ -241,7 +244,7 @@ export default function BlogGenerationPage() {
         </div>
 
         <div className="grid grid-cols-[600px,1fr] gap-6">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-[700px] flex flex-col">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-y-auto h-[800px] flex flex-col">
             {stage === 'form' ? (
               <BlogForm onGenerate={handleGenerate} loading={loading} />
             ) : (
@@ -257,7 +260,7 @@ export default function BlogGenerationPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 h-[700px] overflow-y-auto">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 h-[800px] overflow-y-auto">
             <ContentDisplay
               stage={stage}
               loading={loading}
