@@ -2,65 +2,83 @@ from langchain.prompts import PromptTemplate
 
 keyword_prompt = PromptTemplate(
     input_variables=["topic"],
-    template="""You are a marketing director with 10+ years of SEO expertise.
-Given a topic, your task is to generate a concise list of high-impact keywords ready for article discovery and content creation.
+    template="""You are an SEO strategist trained in RankBrain and semantic search.
+Given a topic, generate exactly three **high-intent, long-tail keyword phrases** that prioritize authoritative sources and user review signals.
 
 <topic>{topic}</topic>
 
-## Guidelines:
-- Analyze the provided topic.
-- Generate exactly three high-intent, long-tail keywords that capture the core search intent.
-- Focus on phrases a user would type into a search engine when they are close to making a decision or looking for a specific, detailed answer.
+### Guidelines
+- Classify the **search intent** for this topic (informational, transactional, or navigational) and ensure all keywords align with that intent.
+- Each keyword should reflect **natural language phrasing** used by real users.
+- Include **semantic variants** and **entity-based keywords** (related concepts or questions RankBrain would associate with the topic).
+- Prioritize phrases that appear in:
+  * Government, educational (.gov, .edu), and industry authority sites
+  * User review platforms and community discussions (Reddit, Quora, forums)
+  * Expert blog commentary and case studies
+- Focus on **question-based keywords** that reveal user intent ("how does X work", "is X worth it", "X vs Y reviews")
+- Include **comparison and review modifiers** (best, top-rated, verified, expert-reviewed, user experience)
+- Avoid generic one-word terms.
+- Make sure to add one keywords to extract from community discussions.
 
-Output :
-You MUST respond with ONLY valid JSON in this exact format:
-{{"keywords": ["keyword1", "keyword2", "keyword3"]}}"""
+### Output (valid JSON only):
+{{
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}}
+"""
 )
-
 
 outlines_prompt = PromptTemplate(
     input_variables=["keywords", "articles", "user_input", "previous_outline", "num_outlines"],
-    template="""You are a content strategist who creates article structures that engage readers from start to finish.
-Your task is to create clear, engaging article outlines using the provided keywords, articles, and user input.
+    template="""Create a RankBrain-optimized article outline that maximizes user engagement and SERP visibility with authoritative data and expert quotes.
 
 <keywords>{keywords}</keywords>
-
 <articles>{articles}</articles>
-
 <previous_outline>{previous_outline}</previous_outline>
-
 <user_input>{user_input}</user_input>
 
-You MUST create EXACTLY {num_outlines} sections. Count carefully and ensure your outline contains precisely {num_outlines} sections.
+Create EXACTLY {num_outlines} sections.
 
-Natural Progression Framework:
-  **The Hook** – Capture attention right away. Introduce the reader's problem or desire and why it matters now.
-  **The Recognition** – Reveal what's truly happening beneath the surface. Help readers see the real issue.
-  **The Proof** – Present data, examples, or evidence that confirm your insight.
-  **The Insight** – Offer a fresh, thought-provoking perspective that reframes understanding.
-  **The Path Forward** – Show readers a clear, actionable framework or next step.
-  **The Conclusion (Momentum)** – End with clarity, summarizing key takeaways and motivating action.
+### RankBrain Signals to Maximize
+- Dwell Time: Progressive value delivery keeps readers engaged
+- Low Bounce: Answer queries comprehensively 
+- CTR: Compelling titles/H2s that stand out in SERPs
+- Scroll Depth: Structure encourages full-page reading
 
-Article Structure:
-The outline must follow this flow: Introduction → Main Body → Conclusion
-- **Introduction** = The Hook
-- **Main Body** = Recognition, Proof, Insight, Path Forward
-- **Conclusion** = Momentum
+### Content Flow Framework
+Distribute these 6 elements *throughout* the {num_outlines} sections.
+**Hook** - Problem/opportunity with urgency (include surprising statistic)
+**Recognition** - Reveal underlying issue (back with expert quote)
+**Proof** - Data tables, examples, case studies, user testimonials
+**Insight** - Unique perspective/framework (supported by research)
+**Path Forward** - Actionable strategies (with success metrics)
+**Momentum** - Reinforce takeaways, inspire action
 
-Instructions:
-- Use the keywords to understand what readers are searching for
-- Study the articles to find compelling angles and supporting evidence
-- Create one main title that captures the core promise or revelation
-- Create EXACTLY {num_outlines} sections following the natural progression framework
-- Distribute the 6 framework elements (Hook, Recognition, Proof, Insight, Path Forward, Conclusion) across your {num_outlines} sections intelligently
-- Each section needs a compelling title and 1-2 sentence description
-- The section titles should feel natural and engaging, not formulaic
-- Formulate a single, direct follow-up question to confirm your interpretation
+### Enhanced Requirements
+- **Statistical Tables**: Include 1-2 sections that will feature data tables (comparison charts, before/after metrics, industry benchmarks)
+- **Expert Quotes**: Mark 2-3 sections that should incorporate authoritative quotes from industry leaders, researchers, or verified practitioners
+- **User Insights**: Identify 1-2 sections for real user experiences, reviews, or community feedback
+- **Data Visualization**: Note which sections benefit from presenting data in table format vs. narrative
+
+### Optimization Requirements
+- Title: Include primary keyword naturally, promise specific value
+- Sections: CTR-optimized titles using power words, numbers, curiosity gaps
+- Include 1+ section formatted for featured snippet (definition, list, comparison, FAQ, steps)
+- Cover full semantic field: what, why, how, when, who, where
+- Address related questions to reduce follow-up searches
+- Use engagement triggers: curiosity gaps, pattern interrupts
+- Show expertise through firsthand experience signals
+
+### Section Creation (for each of {num_outlines} sections)
+- Compelling, descriptive title (NOT generic labels like "Introduction" or "Conclusion")
+- 2-3 sentence description covering:
+  * What's included
+  * Why it matters
+  * Unique value provided
+
 
 When modifying (if user_input and previous_outline exist):
 - Start with the previous outline
 - Apply user feedback exactly as requested
-- Maintain EXACTLY {num_outlines} sections
 - Maintain the natural flow and reader journey
 
 You MUST respond with ONLY valid JSON in this exact format:
@@ -77,57 +95,78 @@ You MUST respond with ONLY valid JSON in this exact format:
 )
 
 write_sections_prompt = PromptTemplate(
-    input_variables=["tone", "length", "target_audience", "outline_title", "outline_markdown", "web_content", "user_input", "previous_draft"],
-    template="""You are a professional content writer who turns complex ideas into clear, engaging articles.
-
-Most articles are either too complicated or too shallow. Readers need content that is both easy to understand and valuable.
-Your task is to write a complete, ready-to-publish article based on the outline and research provided.
-Create articles that combine clarity, authority, and reader connection.
+    input_variables=["tone", "length", "target_audience", "title","outlines","web_content", "user_input", "previous_draft"],
+    template="""Write a #1-ranking article optimized for RankBrain satisfaction signals with authoritative data, expert quotes, and user insights.
 
 <tone>{tone}</tone>
-
 <length>{length}</length>
-
 <target_audience>{target_audience}</target_audience>
-
-<outline_title>{outline_title}</outline_title>
-
-<outline_markdown>{outline_markdown}</outline_markdown>
-
+<title>{title}</title>
+<outlines>{outlines}</outlines>
 <web_content>{web_content}</web_content>
-
 <previous_draft>{previous_draft}</previous_draft>
-
 <user_input>{user_input}</user_input>
 
-Article Structure:
-Your article MUST follow this exact flow: Introduction → Main Body → Conclusion
-Map provided outlines to this structure:
-- **Introduction** = Hook
-- **Main Body** = Recognition, Proof, Insight, Path Forward
-- **Conclusion** = Momentum
+### RankBrain Success Targets
+1. Dwell Time: 3+ minutes (engaging content)
+2. Low Bounce: Complete query answer prevents return-to-search
+3. CTR: Outperform competitor meta titles/descriptions
+4. Authority Signals: Expert quotes, statistical tables, user reviews
 
-Writing Guide:
-- **Hook**: Start strong—relatable scenario, fact, or question. Promise transformation in 100–150 words.  
-- **Main Body**: Reveal, prove, and clarify insights naturally; each section should flow into the next.  
-- **Conclusion**: End with momentum and clear takeaways.
+### Article Structure
+- Use the exact section titles from the <outlines> as your ## headings.
+- Write content for each <outlines> section based on the <web_content>.
+- Incorporate content_type indicators from outlines (DATA TABLE, EXPERT QUOTE, USER REVIEW).
 
-Instructions:
-- Follow the outline_title and structure from outline_markdown exactly
-- Use the section titles from the outline as ## headings
-- Match the requested tone and length exactly
-- Write specifically for the target_audience, adjusting complexity, examples, and language to their level
-- Use web_content for accurate facts integrate them naturally
-- Ensure smooth transitions between sections
-- The article should read as one cohesive narrative with natural momentum from start to finish
-- Formulate a single, direct follow-up question to confirm your interpretation. The question should make it clear that the user can either approve the summary to proceed or provide feedback to refine it.
+### Enhanced Content Elements
 
-Formatting Standards:
-- Use markdown: # for title, ## for main sections, ### for subsections if needed
-- Bold key insights, important statistics, or takeaway phrases
-- Use bullet points for lists, steps, or multiple examples
-- NO inline citations or URLs in the article body (citations go in separate JSON field)
+**Statistical Tables**: 
+- Create markdown tables for data comparisons, benchmarks, or metrics
+- Include 3-5 rows minimum, clearly labeled columns
+- Source all statistics with authoritative citations
+- Use tables for: comparison matrices, before/after results, industry benchmarks, survey data
 
+**Expert Quotes**:
+- Incorporate 2-4 quotes from authoritative sources (researchers, industry leaders, verified practitioners)
+- Format as blockquotes with attribution
+- Use quotes that provide unique insights or validate key points
+- Prioritize quotes from .gov, .edu, established industry authorities
+
+**User Reviews & Testimonials**:
+- Include real-world experiences and user feedback
+- Balance positive and constructive perspectives
+- Aggregate common themes from multiple reviews
+- Format user quotes distinctly (e.g., italics with "— Username, Platform")
+
+### SEO Optimization
+**Keywords**: Primary 3-5x (title, H2, intro, body, conclusion), secondary 2-3x each, LSI naturally
+**Featured Snippets**: 40-60 word definitions, numbered steps, comparison tables, direct question answers, contextualized statistics
+**EEAT**: Firsthand examples, authoritative sources (in citations), acknowledge limitations, current data, deep analysis, original insights, expert validation
+
+### Writing Quality
+**Readability**: Flesch 60-70, sentences 15-20 words avg (5-30 range), paragraphs 2-4 sentences, 80% active voice, varied transitions
+**Engagement**: Hook in first 100 words, subheadings promise quick wins, curiosity loops, varied paragraph length, strategic lists/bold, smooth transitions, "you" language, layered proof
+**Depth**: Answer "5 Whys", explain what+why, provide context, address objections, share what doesn't work, real-world connections
+**Authority**: Back claims with data, include expert perspectives, acknowledge multiple viewpoints, cite authoritative sources
+
+### Formatting
+- Markdown: # title, ## sections, ### subsections
+- **Bold** key insights, statistics, takeaways
+- Bullets for 3+ items, steps, examples, comparisons
+- Numbered lists only for sequential/ranked items
+- Tables for data: `| Column 1 | Column 2 |`
+- Blockquotes for expert quotes: `> Quote text`
+- Italics for user testimonials: `*"User quote" — User Name*`
+- NO inline citations (use citations JSON)
+- Max 5 lines per paragraph
+
+### Table Format Example
+| Metric | Before | After | % Change |
+|--------|--------|-------|----------|
+| Value1 | 100    | 150   | +50%     |
+
+### Quote Format Example
+> "Expert insight that adds credibility and depth to the article." — Dr. Jane Smith, Industry Expert
 
 When modifying (if user_input and previous_draft exist):
 - Start with previous_draft as the foundation
@@ -179,6 +218,4 @@ You MUST respond with ONLY valid JSON in this exact format:
   "feedback": "user's original input if EDIT, empty string if APPROVE"
 }}"""
 )
-
-
 

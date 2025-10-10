@@ -9,18 +9,18 @@ from dotenv import load_dotenv
 
 load_dotenv('.env')
 
+
 logger = logging.getLogger(__name__)
 
 def get_llm():
-    """Initialize and return the xAI Grok LLM instance."""
     ai_api_key = os.getenv("DEEPSEEK_API_KEY")
     if not ai_api_key:
         raise ValueError("DEEPSEEK_API_KEY environment variable is required")
     logger.info(f"Initializing DeepSeek LLM: model='deepseek-reasoner'")
     llm = ChatDeepSeek(
-        model="deepseek-reasoner",
+        model="deepseek-chat",
         api_key=ai_api_key,
-        temperature=0.5,
+        temperature=0.6,
     )
     return llm
 
@@ -45,7 +45,7 @@ def get_llm():
     llm = AnthropicLLM(
         model="claude-sonnet-4-5-20250929",
         api_key=api_key,
-        temperature=0.6,
+        temperature=0.4,
     )
     return llm"""
 

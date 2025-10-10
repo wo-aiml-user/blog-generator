@@ -1,5 +1,9 @@
-import { FileText, Loader2, BookOpen } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { FileText, Loader2, BookOpen, Copy, Check, Edit3, Save } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface OutlineSection {
   section: string;
@@ -28,6 +32,8 @@ interface ContentDisplayProps {
   loading: boolean;
   outlines: Outlines | null;
   draftArticle: DraftArticle | null;
+  editedContent: string;
+  setEditedContent: (content: string) => void;
 }
 
 export default function ContentDisplay({
@@ -35,7 +41,61 @@ export default function ContentDisplay({
   loading,
   outlines,
   draftArticle,
+  editedContent,
+  setEditedContent,
 }: ContentDisplayProps) {
+  const [copiedOutlines, setCopiedOutlines] = useState(false);
+  const [copiedDraft, setCopiedDraft] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  // Configure marked options
+  marked.setOptions({
+    gfm: true, // GitHub Flavored Markdown
+    breaks: true, // Convert \n to <br>
+  });
+
+  // Parse and sanitize markdown content
+  const sanitizedHtml = useMemo(() => {
+    if (!draftArticle?.content) return '';
+    const rawHtml = marked.parse(draftArticle.content) as string;
+    return DOMPurify.sanitize(rawHtml);
+  }, [draftArticle?.content]);
+
+  const copyOutlinesToClipboard = () => {
+    if (!outlines) return;
+    
+    let text = `${outlines.title}\n\n`;
+    outlines.outlines.forEach((section, index) => {
+      text += `${index + 1}. ${section.section}\n${section.description}\n\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedOutlines(true);
+      setTimeout(() => setCopiedOutlines(false), 2000);
+    });
+  };
+
+  const copyDraftToClipboard = () => {
+    if (!draftArticle) return;
+    
+    let text = draftArticle.content;
+    
+    if (draftArticle.citations && draftArticle.citations.length > 0) {
+      text += '\n\n---\n\nReferences:\n';
+      draftArticle.citations.forEach((citation, index) => {
+        text += `[${index + 1}] ${citation.title}\n${citation.url}\n`;
+        if (citation.relevance) {
+          text += `${citation.relevance}\n`;
+        }
+        text += '\n';
+      });
+    }
+    
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedDraft(true);
+      setTimeout(() => setCopiedDraft(false), 2000);
+    });
+  };
   if (stage === 'form') {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center">
@@ -66,9 +126,28 @@ export default function ContentDisplay({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-slate-900">{outlines.title}</h2>
-            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-              <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-              <span>Generated</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={copyOutlinesToClipboard}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                title="Copy outlines to clipboard"
+              >
+                {copiedOutlines ? (
+                  <>
+                    <Check className="w-4 h-4 text-green-600" />
+                    <span className="text-green-600">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span></span>
+                  </>
+                )}
+              </button>
+              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                <span>Generated</span>
+              </div>
             </div>
           </div>
           <p className="text-sm text-slate-500">
@@ -115,7 +194,41 @@ export default function ContentDisplay({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-900">Draft Article</h2>
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-3 text-sm">
+              <button
+                onClick={copyDraftToClipboard}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                title="Copy article to clipboard"
+              >
+                {copiedDraft ? (
+                  <>
+                    <Check className="w-4 h-4 text-green-600" />
+                    <span className="text-green-600">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span></span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setEditMode(!editMode)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                title={editMode ? "Save changes" : "Edit article"}
+              >
+                {editMode ? (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Save</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit3 className="w-4 h-4" />
+                    <span>Edit</span>
+                  </>
+                )}
+              </button>
               <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full">
                 <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                 <span>Draft Ready</span>
@@ -132,22 +245,27 @@ export default function ContentDisplay({
           </p>
         </div>
 
-        <article className="prose prose-slate max-w-none mb-8">
-          <ReactMarkdown
-            components={{
-              h1: ({ node, ...props }) => <h1 className="text-3xl font-bold text-slate-900 mb-4" {...props} />,
-              h2: ({ node, ...props }) => <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4" {...props} />,
-              h3: ({ node, ...props }) => <h3 className="text-xl font-semibold text-slate-900 mt-6 mb-3" {...props} />,
-              p: ({ node, ...props }) => <p className="text-slate-700 leading-relaxed mb-4" {...props} />,
-              ul: ({ node, ...props }) => <ul className="list-disc list-inside space-y-2 mb-4 text-slate-700" {...props} />,
-              ol: ({ node, ...props }) => <ol className="list-decimal list-inside space-y-2 mb-4 text-slate-700" {...props} />,
-              li: ({ node, ...props }) => <li className="ml-4" {...props} />,
-              strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-              em: ({ node, ...props }) => <em className="italic" {...props} />,
-            }}
-          >
-            {draftArticle.content}
-          </ReactMarkdown>
+        <article className="markdown-content">
+          {editMode ? (
+            <ReactQuill
+              value={editedContent}
+              onChange={setEditedContent}
+              theme="snow"
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['link'],
+                  ['clean']
+                ],
+              }}
+            />
+          ) : (
+            <div
+              dangerouslySetInnerHTML={{ __html: editedContent || sanitizedHtml }}
+            />
+          )}
         </article>
 
         {draftArticle.citations && draftArticle.citations.length > 0 && (

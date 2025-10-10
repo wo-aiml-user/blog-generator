@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Zap, Send, Loader2, FileText, CheckCircle2, Home } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { marked } from 'marked';
 import BlogForm from '../components/BlogForm';
 import ChatInterface from '../components/ChatInterface';
 import ContentDisplay from '../components/ContentDisplay';
@@ -40,24 +41,76 @@ export default function BlogGenerationPage() {
   const [followUpQuestion, setFollowUpQuestion] = useState('');
   const [outlines, setOutlines] = useState<Outlines | null>(null);
   const [draftArticle, setDraftArticle] = useState<DraftArticle | null>(null);
+  const [editedContent, setEditedContent] = useState<string>('');
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; time: string }>>([]);
   const [userInput, setUserInput] = useState('');
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Initialize session and load session data
   useEffect(() => {
-    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setSessionId(id);
+    const storedSessionId = localStorage.getItem('blogGeneratorSessionId');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+      // Load session-specific data
+      try {
+        const sessionKey = `blogGenerator_${storedSessionId}`;
+        const stored = localStorage.getItem(sessionKey);
+        if (stored) {
+          const data = JSON.parse(stored);
+          setChatMessages(data.chatMessages || []);
+          setStage(data.stage || 'form');
+          setCurrentStep(data.currentStep || 1);
+          setOutlines(data.outlines || null);
+          setDraftArticle(data.draftArticle || null);
+          setEditedContent(data.editedContent || '');
+          setFollowUpQuestion(data.followUpQuestion || '');
+        }
+      } catch (error) {
+        console.error('Error loading session data from localStorage:', error);
+      }
+    } else {
+      const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      setSessionId(id);
+      localStorage.setItem('blogGeneratorSessionId', id);
+    }
+    setIsLoadingSession(false);
   }, []);
+
+  // Save session data whenever it changes (but not during initial load)
+  useEffect(() => {
+    if (sessionId && !isLoadingSession) {
+      const sessionKey = `blogGenerator_${sessionId}`;
+      const sessionData = {
+        chatMessages,
+        stage,
+        currentStep,
+        outlines,
+        draftArticle,
+        editedContent,
+        followUpQuestion,
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+    }
+  }, [sessionId, chatMessages, stage, currentStep, outlines, draftArticle, followUpQuestion, isLoadingSession]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
+  useEffect(() => {
+    if (draftArticle?.content && !editedContent) {
+      // Convert markdown to HTML for editing
+      const html = marked.parse(draftArticle.content) as string;
+      setEditedContent(html);
+    }
+  }, [draftArticle, editedContent]);
+
   const getCurrentTime = () => {
     return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
-  const handleGenerate = async (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number, sourceUrl: string) => {
+  const handleGenerate = async (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number) => {
     setLoading(true);
     setStage('outlines');
     setCurrentStep(1);
@@ -76,7 +129,6 @@ export default function BlogGenerationPage() {
           length,
           target_audience: targetAudience,
           num_outlines: numOutlines,
-          source_url: sourceUrl,
         }),
       });
 
@@ -90,6 +142,7 @@ export default function BlogGenerationPage() {
       if (data.outlines_json) {
         setOutlines(data.outlines_json);
         setFollowUpQuestion(data.follow_up_question || '');
+        setCurrentStep(2);
         setStatusMessage('Step 1: Outlines Generated');
 
         const sectionCount = data.outlines_json.outlines?.length || 0;
@@ -146,10 +199,10 @@ export default function BlogGenerationPage() {
       // Check if we got a draft article
       if (data.draft_article) {
         setStage('draft');
-        setCurrentStep(2);
+        setCurrentStep(3);
         setDraftArticle(data.draft_article);
         setFollowUpQuestion(data.follow_up_question || '');
-        setStatusMessage('Step 2: Draft Generated');
+        setStatusMessage('Step 3: Draft Generated');
 
         setChatMessages(prev => [...prev, {
           role: 'ai',
@@ -160,6 +213,7 @@ export default function BlogGenerationPage() {
         // Outline was modified, update it
         setOutlines(data.outlines_json);
         setFollowUpQuestion(data.follow_up_question || '');
+        setCurrentStep(2);
         setStatusMessage('Outline Updated');
 
         setChatMessages(prev => [...prev, {
@@ -184,7 +238,7 @@ export default function BlogGenerationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <header className="border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Zap className="w-6 h-6 text-white" />
@@ -210,7 +264,7 @@ export default function BlogGenerationPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-[1600px] mx-auto px-6 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-slate-900 mb-2">AI Blog Writer</h2>
           <p className="text-slate-600">Create engaging blog posts with the power of artificial intelligence</p>
@@ -243,7 +297,7 @@ export default function BlogGenerationPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[600px,1fr] gap-6">
+        <div className="grid grid-cols-[420px,1fr] gap-6">
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-y-auto h-[800px] flex flex-col">
             {stage === 'form' ? (
               <BlogForm onGenerate={handleGenerate} loading={loading} />
@@ -266,6 +320,8 @@ export default function BlogGenerationPage() {
               loading={loading}
               outlines={outlines}
               draftArticle={draftArticle}
+              editedContent={editedContent}
+              setEditedContent={setEditedContent}
             />
           </div>
         </div>

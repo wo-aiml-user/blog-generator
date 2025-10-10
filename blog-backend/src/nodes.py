@@ -2,6 +2,7 @@ import logging
 import json
 from typing import Dict, Any
 from langchain.prompts import ChatPromptTemplate
+from langsmith import traceable
 
 from utils.model_config import get_llm
 from utils.tools import search_articles_parallel
@@ -33,6 +34,7 @@ def _coerce_json(text: str) -> Dict[str, Any]:
             return {"text": text}
 
 
+@traceable(name="generate_keywords_node")
 def generate_keywords_node(state):
     """Node 1: Generate 3 keywords from topic using LLM"""
     logger.info("="*80)
@@ -64,6 +66,7 @@ def generate_keywords_node(state):
     return {"keywords": keywords_str, "current_stage": "keywords"}
 
 
+@traceable(name="search_articles_citations_node")
 def search_articles_citations_node(state):
     """Node 2: Search web articles for each keyword (keywords-only mode)"""
     logger.info("="*80)
@@ -72,7 +75,7 @@ def search_articles_citations_node(state):
     kw_string = state.keywords or state.topic
     queries = [kw.strip() for kw in kw_string.split(',') if kw.strip()]
     
-    articles = search_articles_parallel(queries, max_results=1)
+    articles = search_articles_parallel(queries, max_results=2)
     
     logger.info("[NODE 2] Retrieved %d articles", len(articles))
     logger.info("[NODE 2 - SEARCH_ARTICLES] END")
@@ -85,6 +88,7 @@ def search_articles_citations_node(state):
     }
 
 
+@traceable(name="generate_outlines_node")
 def generate_outlines_node(state):
     logger.info("="*80)
     logger.info("[NODE 3 - GENERATE_OUTLINES] START")
@@ -157,6 +161,7 @@ def generate_outlines_node(state):
 
 
 
+@traceable(name="outline_router_node")
 def outline_router_node(state):
     """Node 4: Router node after outline generation - uses LLM to decide APPROVE or EDIT"""
     logger.info("="*80)
@@ -204,6 +209,7 @@ def outline_router_node(state):
     return {"routing_decision": decision, "user_feedback": feedback if action == "EDIT" else ""}
 
 
+@traceable(name="write_sections_node")
 def write_sections_node(state):
     logger.info("="*80)
     logger.info("[NODE 5 - WRITE_SECTIONS] START")
@@ -215,6 +221,13 @@ def write_sections_node(state):
     tone = state.tone
     length = state.length
     target_audience = state.target_audience
+    keywords = state.keywords
+    outlines_data = state.outlines_json or {}
+    outline_title = outlines_data.get("title", "") or ((state.draft_article or {}).get("title", "") if getattr(state, 'draft_article', None) else "")
+    outline_sections = outlines_data.get("outlines", [])
+    outlines_str = "\n".join([
+        f"- {s.get('section', '')}: {s.get('description', '')}" for s in outline_sections
+    ]) if outline_sections else ""
     if user_feedback and state.draft_article:
         logger.info("[NODE 5] Mode: MODIFICATION (using only previous_draft + user_input)")
         previous_draft = json.dumps(state.draft_article, indent=2, ensure_ascii=False)
@@ -222,8 +235,9 @@ def write_sections_node(state):
             "tone": tone,
             "length": length,
             "target_audience": target_audience,
-            "outline_title": "",
-            "outline_markdown": "",
+            "keywords": keywords,
+            "outlines": outlines_str,
+            "title": outline_title,
             "web_content": "",
             "user_input": user_feedback,
             "previous_draft": previous_draft
@@ -234,12 +248,7 @@ def write_sections_node(state):
         logger.info("[NODE 5] Input - length='%s'", length)
         logger.info("[NODE 5] Input - target_audience='%s'", target_audience)
         logger.info("[NODE 5] Input - keywords='%s'", state.keywords)
-        
-        outlines = state.outlines_json or {}
-        outline_title = outlines.get("title", "")
-        outline_sections = outlines.get("outlines", [])
-        outline_markdown = "\n".join([f"## {s.get('section', '')}\n{s.get('description', '')}" for s in outline_sections])
-        
+
         logger.info("[NODE 5] Input - outline_title='%s'", outline_title)
         logger.info("[NODE 5] Input - outline sections count=%d", len(outline_sections))
         
@@ -253,8 +262,9 @@ def write_sections_node(state):
             "tone": tone,
             "length": length,
             "target_audience": target_audience,
-            "outline_title": outline_title,
-            "outline_markdown": outline_markdown,
+            "keywords": keywords,
+            "title": outline_title,
+            "outlines": outlines_str,
             "web_content": web_content,
             "user_input": "None",
             "previous_draft": ""
@@ -269,7 +279,7 @@ def write_sections_node(state):
     out = chain.invoke(prompt_vars)
     
     logger.info("[NODE 5] LLM Response - Raw output:")
-    logger.info(out.content[:2000] + ("..." if len(out.content) > 2000 else ""))
+    logger.info(out.content)
     
     parsed = _coerce_json(out.content)
     
@@ -290,6 +300,7 @@ def write_sections_node(state):
         "follow_up_question": follow_up
     }
 
+@traceable(name="article_router_node")
 def article_router_node(state):
     """Node 6: Router node after article generation - uses LLM to decide APPROVE or EDIT"""
     logger.info("="*80)

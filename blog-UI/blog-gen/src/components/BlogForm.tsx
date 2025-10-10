@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Zap } from 'lucide-react';
 
 interface BlogFormProps {
-  onGenerate: (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number, sourceUrl: string) => void;
+  onGenerate: (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number) => void;
   loading: boolean;
 }
 
@@ -14,7 +14,6 @@ export default function BlogForm({ onGenerate, loading }: BlogFormProps) {
   const [customAudience, setCustomAudience] = useState('');
   const [length, setLength] = useState(500);
   const [numOutlines, setNumOutlines] = useState(6);
-  const [sourceUrl, setSourceUrl] = useState('');
 
   const handleToneChange = (value: string) => {
     setTone(value);
@@ -35,7 +34,7 @@ export default function BlogForm({ onGenerate, loading }: BlogFormProps) {
     const finalTone = tone === 'custom' ? customTone : tone;
     const finalAudience = targetAudience === 'custom' ? customAudience : targetAudience;
     if (topic.trim() && finalTone.trim() && finalAudience.trim() && numOutlines >= 3 && numOutlines <= 8) {
-      onGenerate(topic, finalTone, length, finalAudience, numOutlines, sourceUrl.trim());
+      onGenerate(topic, finalTone, length, finalAudience, numOutlines);
     }
   };
 
@@ -178,22 +177,6 @@ export default function BlogForm({ onGenerate, loading }: BlogFormProps) {
             disabled={loading}
           />
           <p className="text-xs text-slate-500 mt-1">Recommended: 500-1500 words for optimal engagement</p>
-        </div>
-
-        <div>
-          <label htmlFor="sourceUrl" className="block text-sm font-medium text-slate-700 mb-2">
-            Custom Source URL (Optional)
-          </label>
-          <input
-            type="url"
-            id="sourceUrl"
-            value={sourceUrl}
-            onChange={(e) => setSourceUrl(e.target.value)}
-            placeholder="https://example.com/article"
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            disabled={loading}
-          />
-          <p className="text-xs text-slate-500 mt-1">Provide a specific URL to include as a source for research</p>
         </div>
 
         <button
