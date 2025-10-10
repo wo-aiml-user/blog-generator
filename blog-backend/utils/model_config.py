@@ -20,7 +20,7 @@ def get_llm():
     llm = ChatDeepSeek(
         model="deepseek-chat",
         api_key=ai_api_key,
-        temperature=0.6,
+        temperature=0.5,
     )
     return llm
 

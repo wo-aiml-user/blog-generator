@@ -98,11 +98,11 @@ export default function ContentDisplay({
   };
   if (stage === 'form') {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-6">
-          <FileText className="w-10 h-10 text-slate-400" />
+      <div className="h-full flex flex-col items-center justify-center text-center animate-fadeInUp">
+        <div className="w-24 h-24 gradient-blue rounded-3xl flex items-center justify-center mb-8 shadow-lg animate-float">
+          <FileText className="w-12 h-12 text-white" />
         </div>
-        <h3 className="text-xl font-bold text-slate-900 mb-3">Ready to Generate Content</h3>
+        <h3 className="text-3xl font-bold text-slate-900 mb-4">Ready to Create?</h3>
         <p className="text-slate-600 max-w-md">
           Your generated blog post content will appear here. Fill out the form on the left and
           click "Generate Blog Post" to get started.
@@ -124,12 +124,12 @@ export default function ContentDisplay({
     return (
       <div className="overflow-y-auto max-h-full">
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900">{outlines.title}</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-slate-900">{outlines.title}</h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={copyOutlinesToClipboard}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 border-2 border-indigo-200 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm"
                 title="Copy outlines to clipboard"
               >
                 {copiedOutlines ? (
@@ -144,7 +144,7 @@ export default function ContentDisplay({
                   </>
                 )}
               </button>
-              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-4 py-2 rounded-full font-semibold shadow-sm">
                 <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                 <span>Generated</span>
               </div>
@@ -192,12 +192,12 @@ export default function ContentDisplay({
     return (
       <div className="overflow-y-auto max-h-full">
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Draft Article</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-slate-900">Draft Article</h2>
             <div className="flex items-center gap-3 text-sm">
               <button
                 onClick={copyDraftToClipboard}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 border-2 border-indigo-200 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm"
                 title="Copy article to clipboard"
               >
                 {copiedDraft ? (
@@ -229,7 +229,7 @@ export default function ContentDisplay({
                   </>
                 )}
               </button>
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-full font-semibold shadow-sm">
                 <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                 <span>Draft Ready</span>
               </div>

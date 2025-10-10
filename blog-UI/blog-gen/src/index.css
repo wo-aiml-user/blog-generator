@@ -2,6 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) rgb(241 245 249);
+}
+
+/* Premium Animations - Defined in tailwind.config.js */
+/* Supporting animation classes */
+.animate-gradient {
+  background-size: 200% 200%;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-gradient,
+  .animate-fadeInUp,
+  .animate-scaleIn,
+  .hover-lift {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Glassmorphism */
+.glass {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+}
+
+.glass-dark {
+  @apply bg-slate-900/70 backdrop-blur-xl border border-white/10 shadow-xl;
+}
+
+/* Premium Gradients */
+.gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+}
+
+.gradient-purple {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+}
+
+/* Hover Effects */
+.hover-lift {
+  @apply transition-all duration-300;
+}
+
+.hover-lift:hover {
+  @apply -translate-y-2 shadow-2xl;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+}
+
 /* Markdown Content Styling */
 .markdown-content {
   @apply max-w-none mb-8;
