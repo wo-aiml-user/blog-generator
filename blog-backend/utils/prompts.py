@@ -219,3 +219,29 @@ You MUST respond with ONLY valid JSON in this exact format:
 }}"""
 )
 
+image_prompt = PromptTemplate(
+    input_variables=["title", "tone", "target_audience"],
+    template="""Generate a photorealistic, professional image for the blog article: {title}
+
+Style Requirements:
+- Tone: {tone}
+- Target Audience: {target_audience}
+- Aspect Ratio: 16:9 (suitable for blog headers)
+
+Visual Guidelines:
+- Use a medium or wide shot composition
+- Professional lighting (natural light, soft diffused, or golden hour)
+- Modern, clean aesthetic
+- High quality, engaging visual storytelling
+- No text, words, or titles in the image
+- Emphasize relevant textures and details related to the topic
+- Create a mood that matches the {tone} tone
+- Appeal visually to {target_audience}
+
+Technical Specifications:
+- Photorealistic quality
+- Sharp focus on main subject
+- Professional color grading
+- Suitable for web publication"""
+)
+

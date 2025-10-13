@@ -4,7 +4,7 @@ from typing import Dict, Any
 from langchain.prompts import ChatPromptTemplate
 from langsmith import traceable
 
-from utils.model_config import get_llm
+from utils.model_config import get_llm, generate_images
 from utils.tools import search_articles_parallel
 from utils.prompts import (
     keyword_prompt,
@@ -347,3 +347,46 @@ def article_router_node(state):
     logger.info("="*80)
     
     return {"routing_decision": decision, "user_feedback": feedback if action == "EDIT" else ""}
+
+
+@traceable(name="generate_images_node")
+def generate_images_node(state):
+    """Node 7: Generate images for the blog article based on the title"""
+    
+    logger.info("="*80)
+    logger.info("[NODE 7 - GENERATE_IMAGES] START")
+    
+    draft_article = state.draft_article
+    title = draft_article.get("title")
+    tone = state.tone
+    target_audience = state.target_audience
+    
+    logger.info("[NODE 7] Input - title='%s', tone='%s', target_audience='%s'", title, tone, target_audience)
+    logger.info("[NODE 7] Generating images directly with title, tone, and target_audience")
+    
+    try:
+        base64_images, formatted_prompt = generate_images(
+            title=title,
+            tone=tone,
+            target_audience=target_audience,
+            number_of_images=1
+        )
+        logger.info("[NODE 7] Successfully received %d base64 images from generate_images()", len(base64_images))
+        
+        logger.info("[NODE 7 - GENERATE_IMAGES] END")
+        logger.info("="*80)
+        
+        return {
+            "generated_images": base64_images,
+            "image_prompt": formatted_prompt,
+            "image_count": len(base64_images)
+        }
+    except Exception as e:
+        logger.error("[NODE 7] Error generating images: %s", str(e))
+        logger.info("[NODE 7 - GENERATE_IMAGES] END")
+        logger.info("="*80)
+        return {
+            "generated_images": [],
+            "image_prompt": "",
+            "image_count": 0
+        }

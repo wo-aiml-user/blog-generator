@@ -70,9 +70,6 @@ def search_articles_parallel(queries: List[str], max_results: int = 2) -> List[D
     Performs Perplexity search for each query separately and limits results per query.
     Returns max_results articles per query (total = len(queries) * max_results).
     """
-    if not queries:
-        return []
-    
     logger.info("[PERPLEXITY_MULTI] queries=%s | max_results_per_query=%d", queries, max_results)
     
     all_results = []

@@ -8,6 +8,9 @@ from logging.handlers import RotatingFileHandler
 from time import perf_counter
 from src.graph import app as graph_app
 from typing import Optional
+from utils.model_config import generate_images
+import base64
+import re
 
 def _setup_logging():
     root = logging.getLogger()
@@ -53,6 +56,10 @@ class UserInputRequest(BaseModel):
     session_id: str
     user_feedback: str
 
+class ImageRegenerateRequest(BaseModel):
+    session_id: str
+    image_feedback: str
+
 class GenerateResponse(BaseModel):
     status: str
     session_id: str
@@ -63,6 +70,9 @@ class GenerateResponse(BaseModel):
     outlines_json: Optional[dict] = None
     draft_article: Optional[dict] = None
     follow_up_question: Optional[str] = None
+    generated_images: Optional[list] = None
+    image_prompt: Optional[str] = None
+    image_count: Optional[int] = 0
 
 
 def _get_graph_response(session_id: str) -> GenerateResponse:
@@ -78,6 +88,9 @@ def _get_graph_response(session_id: str) -> GenerateResponse:
         session_id=session_id,
         current_stage=current_stage,
         keywords=values.get("keywords"),
+        generated_images=values.get("generated_images"),
+        image_prompt=values.get("image_prompt"),
+        image_count=values.get("image_count", 0),
         articles=values.get("articles"),
         citations=values.get("citations"),
         outlines_json=values.get("outlines_json"),
@@ -165,6 +178,77 @@ def user_input(req: UserInputRequest):
     except Exception as e:
         duration_ms = int((perf_counter() - start) * 1000)
         logger.exception("[API /user_input] FAILED | duration_ms=%d | error=%s", duration_ms, str(e))
+        logger.info("="*100)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/regenerate_image", response_model=GenerateResponse)
+def regenerate_image(req: ImageRegenerateRequest):
+    """
+    Endpoint 3: /regenerate_image
+    - Takes: image_feedback (user's feedback for image regeneration)
+    - Regenerates the image based on the feedback
+    - Returns: updated generated_images and image_prompt
+    """
+    start = perf_counter()
+    config = {"configurable": {"thread_id": req.session_id}}
+
+    logger.info("="*100)
+    logger.info("[API /regenerate_image] START | session_id=%s", req.session_id)
+    logger.info("[API /regenerate_image] Request - feedback='%s'", req.image_feedback)
+
+    try:
+        st = graph_app.get_state(config)
+        values = st.values        
+        draft_article = values.get("draft_article") or {}
+        title = draft_article.get("title", values.get("topic", ""))
+        tone = values.get("tone", "")
+        target_audience = values.get("target_audience", "")
+        previous_images = values.get("generated_images", [])
+        previous_image_bytes = None
+        if previous_images:
+            previous_image = previous_images[0]
+            if previous_image.startswith('data:image'):
+                match = re.search(r'base64,(.+)', previous_image)
+                if match:
+                    previous_image_b64 = match.group(1)
+                    previous_image_bytes = base64.b64decode(previous_image_b64)
+                    logger.info(f"[API /regenerate_image] Extracted {len(previous_image_bytes)} bytes from previous image")
+            else:
+                previous_image_bytes = base64.b64decode(previous_image)
+                logger.info(f"[API /regenerate_image] Decoded {len(previous_image_bytes)} bytes from previous image")
+        
+        logger.info("[API /regenerate_image] Regenerating image with feedback and previous image")
+        base64_images, formatted_prompt = generate_images(
+            title=title,
+            tone=tone,
+            target_audience=target_audience,
+            number_of_images=1,
+            user_feedback=req.image_feedback,
+            previous_image_bytes=previous_image_bytes
+        )
+        
+        graph_app.update_state(
+            config,
+            {
+                "generated_images": base64_images,
+                "image_prompt": formatted_prompt,
+                "image_count": len(base64_images)
+            }
+        )
+        
+        duration_ms = int((perf_counter() - start) * 1000)
+        
+        response = _get_graph_response(req.session_id)
+        
+        logger.info("[API /regenerate_image] Response - image_count=%d", len(base64_images))
+        logger.info("[API /regenerate_image] SUCCESS | duration_ms=%d", duration_ms)
+        logger.info("="*100)
+        
+        return response
+    except Exception as e:
+        duration_ms = int((perf_counter() - start) * 1000)
+        logger.exception("[API /regenerate_image] FAILED | duration_ms=%d | error=%s", duration_ms, str(e))
         logger.info("="*100)
         raise HTTPException(status_code=500, detail=str(e))
 

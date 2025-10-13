@@ -42,6 +42,8 @@ export default function BlogGenerationPage() {
   const [outlines, setOutlines] = useState<Outlines | null>(null);
   const [draftArticle, setDraftArticle] = useState<DraftArticle | null>(null);
   const [editedContent, setEditedContent] = useState<string>('');
+  const [generatedImages, setGeneratedImages] = useState<string[] | null>(null);
+  const [imagePrompt, setImagePrompt] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; time: string }>>([]);
   const [userInput, setUserInput] = useState('');
   const [isLoadingSession, setIsLoadingSession] = useState(true);
@@ -64,6 +66,8 @@ export default function BlogGenerationPage() {
           setOutlines(data.outlines || null);
           setDraftArticle(data.draftArticle || null);
           setEditedContent(data.editedContent || '');
+          setGeneratedImages(data.generatedImages || null);
+          setImagePrompt(data.imagePrompt || null);
           setFollowUpQuestion(data.followUpQuestion || '');
         }
       } catch (error) {
@@ -88,6 +92,8 @@ export default function BlogGenerationPage() {
         outlines,
         draftArticle,
         editedContent,
+        generatedImages,
+        imagePrompt,
         followUpQuestion,
       };
       localStorage.setItem(sessionKey, JSON.stringify(sessionData));
@@ -183,8 +189,57 @@ export default function BlogGenerationPage() {
     setOutlines(null);
     setDraftArticle(null);
     setEditedContent('');
+    setGeneratedImages(null);
+    setImagePrompt(null);
     setChatMessages([]);
     setUserInput('');
+  };
+
+  const handleImageRegenerate = async (feedback: string) => {
+    setLoading(true);
+    setStatusMessage('Regenerating image...');
+
+    try {
+      const response = await fetch('http://localhost:5000/regenerate_image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          image_feedback: feedback,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate image');
+      }
+
+      const data = await response.json();
+      console.log('Image Regenerate API Response:', data);
+
+      if (data.generated_images) {
+        setGeneratedImages(data.generated_images);
+        setImagePrompt(data.image_prompt || null);
+        setStatusMessage('Image regenerated successfully');
+
+        setChatMessages(prev => [...prev, {
+          role: 'ai',
+          content: `I've regenerated the image based on your feedback: "${feedback}"`,
+          time: getCurrentTime(),
+        }]);
+      }
+    } catch (error) {
+      console.error('Error regenerating image:', error);
+      setStatusMessage('Error regenerating image. Please try again.');
+      setChatMessages(prev => [...prev, {
+        role: 'ai',
+        content: 'Sorry, there was an error regenerating the image. Please try again.',
+        time: getCurrentTime(),
+      }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUserSubmit = async () => {
@@ -226,6 +281,8 @@ export default function BlogGenerationPage() {
         setStage('draft');
         setCurrentStep(3);
         setDraftArticle(data.draft_article);
+        setGeneratedImages(data.generated_images || null);
+        setImagePrompt(data.image_prompt || null);
         setFollowUpQuestion(data.follow_up_question || '');
         setStatusMessage('Step 3: Draft Generated');
 
@@ -350,6 +407,10 @@ export default function BlogGenerationPage() {
               draftArticle={draftArticle}
               editedContent={editedContent}
               setEditedContent={setEditedContent}
+              generatedImages={generatedImages}
+              imagePrompt={imagePrompt}
+              sessionId={sessionId}
+              onImageRegenerate={handleImageRegenerate}
             />
           </div>
         </div>

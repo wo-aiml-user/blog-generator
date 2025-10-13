@@ -11,6 +11,7 @@ from src.nodes import (
     outline_router_node,
     write_sections_node,
     article_router_node,
+    generate_images_node,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,9 @@ class State(BaseModel):
     follow_up_question: Optional[str] = ""
     routing_decision: Optional[str] = None
     current_stage: str = "start"
+    generated_images: Optional[List[str]] = None
+    image_prompt: Optional[str] = ""
+    image_count: Optional[int] = 0
 
 def route_entry(state: State) -> str:
     """Entry point router that decides where to start based on current state."""
@@ -75,6 +79,7 @@ workflow.add_node("search", search_articles_citations_node)
 workflow.add_node("generate_outlines", generate_outlines_node)
 workflow.add_node("outline_router", outline_router_node)
 workflow.add_node("write_sections", write_sections_node)
+workflow.add_node("generate_images", generate_images_node)
 workflow.add_node("article_router", article_router_node)
 
 workflow.set_conditional_entry_point(
@@ -91,7 +96,8 @@ workflow.add_edge("generate_keywords", "search")
 workflow.add_edge("search", "generate_outlines")
 workflow.add_edge("generate_outlines", END) 
 
-workflow.add_edge("write_sections", END)  
+workflow.add_edge("write_sections", "generate_images")
+workflow.add_edge("generate_images", END)  
 
 workflow.add_conditional_edges(
     "outline_router",

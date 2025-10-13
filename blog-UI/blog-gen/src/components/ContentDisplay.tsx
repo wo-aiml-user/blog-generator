@@ -1,5 +1,5 @@
-import { FileText, Loader2, BookOpen, Copy, Check, Edit3, Save } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { FileText, Loader2, BookOpen, Copy, Check, Edit3, Save, Image as ImageIcon } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import ReactQuill from 'react-quill';
@@ -34,6 +34,155 @@ interface ContentDisplayProps {
   draftArticle: DraftArticle | null;
   editedContent: string;
   setEditedContent: (content: string) => void;
+  generatedImages: string[] | null;
+  imagePrompt: string | null;
+  sessionId: string;
+  onImageRegenerate?: (feedback: string) => void;
+}
+
+interface ArticleWithImageProps {
+  htmlContent: string;
+  generatedImages: string[] | null;
+  imageEditMode: boolean;
+  imageFeedback: string;
+  isRegeneratingImage: boolean;
+  onImageEditToggle: () => void;
+  onImageFeedbackChange: (feedback: string) => void;
+  onImageRegenerate: () => void;
+}
+
+function ArticleWithImage({
+  htmlContent,
+  generatedImages,
+  imageEditMode,
+  imageFeedback,
+  isRegeneratingImage,
+  onImageEditToggle,
+  onImageFeedbackChange,
+  onImageRegenerate,
+}: ArticleWithImageProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentParts, setContentParts] = useState<{ before: string; after: string }>({ before: '', after: '' });
+
+  useEffect(() => {
+    if (!htmlContent) return;
+
+    // Create a temporary div to parse the HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Get all paragraphs
+    const paragraphs = tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6');
+    
+    // Find the middle point (after ~40% of content)
+    const insertAfterIndex = Math.floor(paragraphs.length * 0.4);
+    
+    if (paragraphs.length > 3 && insertAfterIndex > 0) {
+      const insertPoint = paragraphs[insertAfterIndex];
+      
+      // Split content at the insertion point
+      const beforeContent: Node[] = [];
+      const afterContent: Node[] = [];
+      let foundInsertPoint = false;
+      
+      Array.from(tempDiv.childNodes).forEach((node) => {
+        if (node === insertPoint || foundInsertPoint) {
+          foundInsertPoint = true;
+          afterContent.push(node.cloneNode(true));
+        } else {
+          beforeContent.push(node.cloneNode(true));
+        }
+      });
+      
+      const beforeDiv = document.createElement('div');
+      const afterDiv = document.createElement('div');
+      beforeContent.forEach(node => beforeDiv.appendChild(node));
+      afterContent.forEach(node => afterDiv.appendChild(node));
+      
+      setContentParts({
+        before: beforeDiv.innerHTML,
+        after: afterDiv.innerHTML,
+      });
+    } else {
+      // If content is too short, put image at the end
+      setContentParts({
+        before: htmlContent,
+        after: '',
+      });
+    }
+  }, [htmlContent]);
+
+  return (
+    <div ref={contentRef}>
+      <div dangerouslySetInnerHTML={{ __html: contentParts.before }} />
+      
+      {generatedImages && generatedImages.length > 0 && (
+        <div className="my-8">
+          <div className="rounded-xl overflow-hidden border-2 border-slate-200 shadow-lg">
+            <img 
+              src={generatedImages[0]} 
+              alt="Generated blog image"
+              className="w-full h-auto object-cover"
+            />
+          </div>
+          
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <button
+              onClick={onImageEditToggle}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
+              title={imageEditMode ? "Cancel" : "Edit image"}
+            >
+              {imageEditMode ? (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Cancel</span>
+                </>
+              ) : (
+                <>
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit Image</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {imageEditMode && (
+            <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Image Feedback
+              </label>
+              <textarea
+                value={imageFeedback}
+                onChange={(e) => onImageFeedbackChange(e.target.value)}
+                placeholder="Describe how you'd like to change or regenerate the image..."
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                rows={3}
+              />
+              <button
+                onClick={onImageRegenerate}
+                disabled={!imageFeedback.trim() || isRegeneratingImage}
+                className="mt-3 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isRegeneratingImage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Regenerating...</span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-4 h-4" />
+                    <span>Regenerate Image</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div dangerouslySetInnerHTML={{ __html: contentParts.after }} />
+    </div>
+  );
 }
 
 export default function ContentDisplay({
@@ -43,10 +192,18 @@ export default function ContentDisplay({
   draftArticle,
   editedContent,
   setEditedContent,
+  generatedImages,
+  imagePrompt,
+  sessionId,
+  onImageRegenerate,
 }: ContentDisplayProps) {
   const [copiedOutlines, setCopiedOutlines] = useState(false);
   const [copiedDraft, setCopiedDraft] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [imageEditMode, setImageEditMode] = useState(false);
+  const [imageFeedback, setImageFeedback] = useState('');
+  const [isRegeneratingImage, setIsRegeneratingImage] = useState(false);
+  const articleContentRef = useRef<HTMLDivElement>(null);
 
   // Configure marked options
   marked.setOptions({
@@ -95,6 +252,21 @@ export default function ContentDisplay({
       setCopiedDraft(true);
       setTimeout(() => setCopiedDraft(false), 2000);
     });
+  };
+
+  const handleImageRegenerate = async () => {
+    if (!imageFeedback.trim() || !onImageRegenerate) return;
+    
+    setIsRegeneratingImage(true);
+    try {
+      await onImageRegenerate(imageFeedback);
+      setImageFeedback('');
+      setImageEditMode(false);
+    } catch (error) {
+      console.error('Error regenerating image:', error);
+    } finally {
+      setIsRegeneratingImage(false);
+    }
   };
   if (stage === 'form') {
     return (
@@ -245,7 +417,7 @@ export default function ContentDisplay({
           </p>
         </div>
 
-        <article className="markdown-content">
+        <article className="markdown-content" ref={articleContentRef}>
           {editMode ? (
             <ReactQuill
               value={editedContent}
@@ -262,8 +434,15 @@ export default function ContentDisplay({
               }}
             />
           ) : (
-            <div
-              dangerouslySetInnerHTML={{ __html: editedContent || sanitizedHtml }}
+            <ArticleWithImage 
+              htmlContent={editedContent || sanitizedHtml}
+              generatedImages={generatedImages}
+              imageEditMode={imageEditMode}
+              imageFeedback={imageFeedback}
+              isRegeneratingImage={isRegeneratingImage}
+              onImageEditToggle={() => setImageEditMode(!imageEditMode)}
+              onImageFeedbackChange={setImageFeedback}
+              onImageRegenerate={handleImageRegenerate}
             />
           )}
         </article>
