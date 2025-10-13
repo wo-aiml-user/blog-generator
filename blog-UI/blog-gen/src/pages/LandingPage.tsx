@@ -1,165 +1,314 @@
 import { useNavigate } from 'react-router-dom';
-import { Zap, Network, MessageSquare, Clock, Sparkles, TrendingUp, Award, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useInView } from 'framer-motion';
+import { Waves, Brain, MessageSquare, FileCheck } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const problemRef = useRef(null);
+  const howItWorksRef = useRef(null);
+  const ctaRef = useRef(null);
+  const isProblemInView = useInView(problemRef, { once: true, margin: "-100px" });
+  const isHowItWorksInView = useInView(howItWorksRef, { once: true, margin: "-100px" });
+  const isCtaInView = useInView(ctaRef, { once: true, margin: "-100px" });
+
+  const handleTryNow = () => {
+    navigate('/create');
+  };
+
+  const handleExploreClick = () => {
+    const howItWorksSection = document.getElementById('how-it-works');
+    if (howItWorksSection) {
+      howItWorksSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{ animationDelay: '4s' }}></div>
-      </div>
+    <div className="min-h-screen bg-[#001A2A]">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#003B5C] via-[#004974] to-[#0095D9]">
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#40CFFF] rounded-full blur-[120px]"
+          />
+          <motion.div
+            animate={{
+              scale: [1.2, 1, 1.2],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#0095D9] rounded-full blur-[140px]"
+          />
+        </div>
 
-      {/* Header with Glassmorphism */}
-      <header className="relative z-10 glass border-b border-white/30">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 animate-fadeInUp">
-            <div className="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center shadow-lg hover-glow">
-              <Zap className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Blog Writer</h1>
-              <p className="text-xs text-slate-600 font-medium">Intelligent Content Creation</p>
-            </div>
-          </div>
-          <div className="flex gap-3 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-            <button className="px-5 py-2.5 text-indigo-600 font-medium hover:bg-indigo-50 rounded-xl transition-all duration-300">
-              Home
-            </button>
-            <button
-              onClick={() => navigate('/create')}
-              className="px-6 py-2.5 gradient-blue text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 flex items-center gap-2 hover-glow"
+        {/* Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
+            <h1 className="font-heading text-6xl md:text-7xl lg:text-8xl text-[#E6F4F9] mb-8 leading-tight" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>
+              What if your blog could think like Google before it's written?
+            </h1>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+            className="mb-12"
+          >
+            <p className="text-xl md:text-2xl text-[#E6F4F9] leading-relaxed mb-4">
+              Most AI writers just guess what Google wants.
+            </p>
+            <p className="text-xl md:text-2xl text-[#40CFFF] leading-relaxed mb-4">
+              ContentRank doesn't guess it thinks strategically, aligning with Google's own ranking intelligence.
+            </p>
+            <p className="text-lg md:text-xl text-[#E6F4F9] opacity-90 leading-relaxed">
+              Built on deep semantic modeling, EEAT optimization, and our proprietary Brain Rank Engine™,
+              it writes content that both humans and algorithms trust.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+            className="flex flex-wrap items-center justify-center gap-4"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleExploreClick}
+              className="px-8 py-4 rounded-full font-medium text-lg transition-all duration-300 bg-gradient-to-r from-[#0078C2] to-[#00B4FF] text-white hover:shadow-[0_0_30px_rgba(64,207,255,0.5)] flex items-center gap-2"
             >
-              <Sparkles className="w-4 h-4" />
-              Create Blog
-            </button>
-          </div>
+              <Waves size={20} />
+              Explore How It Works
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleTryNow}
+              className="px-8 py-4 rounded-full font-medium text-lg transition-all duration-300 bg-gradient-to-r from-[#0078C2] to-[#00B4FF] text-white hover:shadow-[0_0_30px_rgba(64,207,255,0.5)] flex items-center gap-2"
+            >
+              <Waves size={20} />
+              Try Now
+            </motion.button>
+          </motion.div>
         </div>
-      </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-20">
-        {/* Hero Section */}
-        <div className="text-center mb-20 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="inline-flex items-center justify-center w-24 h-24 gradient-primary rounded-3xl mb-8 relative shadow-2xl hover-lift">
-            <Zap className="w-12 h-12 text-white" />
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-4 border-white shadow-lg">
-              <Sparkles className="w-4 h-4 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+        {/* Floating Neural Dots */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-[#40CFFF] rounded-full"
+            style={{
+              left: `${20 + i * 10}%`,
+              top: `${30 + (i % 3) * 20}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.3, 0.8, 0.3],
+            }}
+            transition={{
+              duration: 3 + i * 0.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </section>
+
+      {/* The Problem Section */}
+      <section ref={problemRef} className="py-32 px-6 bg-[#001A2A]">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isProblemInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="text-center"
+          >
+            <p className="text-2xl md:text-3xl text-[#E6F4F9] leading-relaxed mb-6">
+              You've tried the usual AI blog generators.
+            </p>
+            <p className="text-2xl md:text-3xl text-[#E6F4F9] leading-relaxed mb-6">
+              They sound good until you realize they all sound the same.
+            </p>
+
+            <div className="my-16 h-px bg-gradient-to-r from-transparent via-[#40CFFF] to-transparent" />
+
+            <p className="text-xl md:text-2xl text-[#40CFFF] leading-relaxed mb-6">
+              The truth? Google isn't fooled by tone or fluff.
+            </p>
+            <p className="text-xl md:text-2xl text-[#E6F4F9] leading-relaxed mb-6">
+              It looks for <span className="text-[#40CFFF] font-semibold">signals</span> context, authority, originality, depth, and consistency.
+            </p>
+            <p className="text-xl md:text-2xl text-[#E6F4F9] leading-relaxed mb-12">
+              And generic AI misses all of them.
+            </p>
+
+            <p className="text-2xl md:text-3xl text-[#40CFFF] font-semibold leading-relaxed">
+              That's why we built ContentRank because writing content for Google's brain requires understanding it.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" ref={howItWorksRef} className="py-32 px-6 bg-gradient-to-b from-[#003B5C] to-[#001A2A]">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isHowItWorksInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            <div className="text-center mb-20">
+              <p className="text-[#40CFFF] text-sm font-medium tracking-wider uppercase mb-4">Simple, Calm, and Intelligent</p>
+              <h2 className="font-heading text-5xl md:text-6xl text-[#E6F4F9]" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>
+                How It Works
+              </h2>
             </div>
+
+            <div className="relative">
+              <div className="hidden md:block absolute left-1/2 top-20 bottom-20 w-0.5 bg-gradient-to-b from-[#40CFFF] via-[#0095D9] to-[#40CFFF] transform -translate-x-1/2" />
+
+              <div className="space-y-24">
+                {[
+                  {
+                    icon: MessageSquare,
+                    title: "Tell Us Your Goal",
+                    description: "Enter your topic, desired length, audience type, and style nothing more."
+                  },
+                  {
+                    icon: Brain,
+                    title: "The Brain Thinks",
+                    description: "Behind the scenes, ContentRank's agentic AI models break down your topic into structured semantic components and EEAT layers."
+                  },
+                  {
+                    icon: FileCheck,
+                    title: "You Get an Expert-Level Blog Draft",
+                    description: "A complete, readable, factual blog designed to perform with predicted rank confidence and content health score."
+                  }
+                ].map((step, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={isHowItWorksInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: 0.2 + index * 0.2, ease: 'easeOut' }}
+                    className={`flex flex-col md:flex-row items-center gap-8 ${
+                      index % 2 === 1 ? 'md:flex-row-reverse' : ''
+                    }`}
+                  >
+                    <div className="flex-1 text-center md:text-left">
+                      <h3 className="font-heading text-3xl md:text-4xl text-[#E6F4F9] mb-4" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>
+                        Step {index + 1} – {step.title}
+                      </h3>
+                      <p className="text-lg text-[#E6F4F9] leading-relaxed opacity-90">
+                        {step.description}
+                      </p>
+                    </div>
+
+                    <div className="relative flex-shrink-0">
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-24 h-24 bg-gradient-to-br from-[#0078C2] to-[#00B4FF] rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(64,207,255,0.4)] relative z-10"
+                      >
+                        <step.icon className="text-white" size={40} />
+                      </motion.div>
+                    </div>
+
+                    <div className="flex-1 hidden md:block" />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section ref={ctaRef} className="py-32 px-6 bg-[#003B5C] relative overflow-hidden">
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[600px] h-[600px] bg-[#40CFFF] rounded-full blur-[150px]"
+        />
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isCtaInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            <h2 className="font-heading text-5xl md:text-6xl text-[#E6F4F9] mb-8" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>
+              Stop guessing what ranks.
+            </h2>
+            <p className="text-3xl md:text-4xl text-[#40CFFF] font-semibold mb-12">
+              Start writing with something that knows.
+            </p>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleTryNow}
+              className="px-8 py-4 rounded-full font-medium text-lg transition-all duration-300 bg-gradient-to-r from-[#0078C2] to-[#00B4FF] text-white hover:shadow-[0_0_30px_rgba(64,207,255,0.5)] flex items-center gap-2 mx-auto"
+            >
+              <Waves size={20} />
+              Try ContentRank for Free
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-16 px-6 bg-[#001A2A]">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Brain className="text-[#40CFFF]" size={32} />
+            <h3 className="font-heading text-3xl text-[#E6F4F9]" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>
+              ContentRank
+            </h3>
           </div>
 
-          <h2 className="text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-            Create Stunning Blogs with
-            <span className="block mt-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
-              AI-Powered Magic
-            </span>
-          </h2>
-
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-            Transform your ideas into engaging, well-structured blog posts with cutting-edge AI.
-            <span className="block mt-2">Simply provide your topic and watch the magic happen ✨</span>
+          <p className="text-lg text-[#E6F4F9] opacity-80 mb-2">
+            Built by people who were tired of rewriting AI content that didn't rank.
+          </p>
+          <p className="text-xl text-[#40CFFF] font-semibold">
+            ContentRank™ - Intelligence with Intent.
           </p>
 
-          {/* CTA Button */}
-          <button
-            onClick={() => navigate('/create')}
-            className="inline-flex items-center gap-3 px-10 py-5 gradient-blue text-white text-lg font-bold rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover-glow group"
-          >
-            <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-            Start Creating Now
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
-
-          <div className="mt-8 flex items-center justify-center gap-6 text-sm">
-            <div className="flex items-center gap-2 glass px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-semibold text-slate-700">100% Free</span>
-            </div>
-            <div className="flex items-center gap-2 glass px-4 py-2 rounded-full">
-              <Zap className="w-4 h-4 text-indigo-600" />
-              <span className="font-semibold text-slate-700">No Signup Required</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Features Grid with Premium Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 max-w-6xl mx-auto">
-          <div className="glass p-8 rounded-3xl hover-lift animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-            <div className="w-16 h-16 gradient-blue rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-              <Network className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">AI-Powered Intelligence</h3>
-            <p className="text-slate-600 leading-relaxed">
-              Advanced neural networks generate high-quality, original content perfectly tailored to your unique needs and style
-            </p>
-          </div>
-
-          <div className="glass p-8 rounded-3xl hover-lift animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
-            <div className="w-16 h-16 gradient-purple rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-              <MessageSquare className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Interactive Collaboration</h3>
-            <p className="text-slate-600 leading-relaxed">
-              Refine and perfect your content through an intuitive chat interface that understands your vision
-            </p>
-          </div>
-
-          <div className="glass p-8 rounded-3xl hover-lift animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
-            <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-              <Clock className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">Lightning Fast</h3>
-            <p className="text-slate-600 leading-relaxed">
-              Generate professional, publication-ready blog posts in minutes instead of hours. Work smarter, not harder
+          <div className="mt-12 pt-8 border-t border-[#40CFFF]/20">
+            <p className="text-sm text-[#E6F4F9] opacity-60">
+              © 2025 ContentRank. All rights reserved.
             </p>
           </div>
         </div>
-
-        {/* Stats Section */}
-        <div className="glass rounded-3xl p-12 mb-20 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="group">
-              <div className="inline-flex items-center justify-center w-16 h-16 gradient-blue rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">15,000+</div>
-              <div className="text-slate-600 font-medium">Blog Posts Created</div>
-            </div>
-            <div className="group">
-              <div className="inline-flex items-center justify-center w-16 h-16 gradient-purple rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <Award className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">4.9/5</div>
-              <div className="text-slate-600 font-medium">Average Rating</div>
-            </div>
-            <div className="group">
-              <div className="inline-flex items-center justify-center w-16 h-16 gradient-primary rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">100%</div>
-              <div className="text-slate-600 font-medium">AI-Powered</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Final CTA */}
-        <div className="text-center animate-fadeInUp" style={{ animationDelay: '0.7s' }}>
-          <h3 className="text-3xl font-bold text-slate-900 mb-4">Ready to Create Amazing Content?</h3>
-          <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
-            Join thousands of content creators who are already using AI to produce exceptional blog posts
-          </p>
-          <button
-            onClick={() => navigate('/create')}
-            className="inline-flex items-center gap-3 px-10 py-5 gradient-primary text-white text-lg font-bold rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover-glow"
-          >
-            <Sparkles className="w-6 h-6" />
-            Get Started Free
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
-      </main>
+      </footer>
     </div>
   );
 }

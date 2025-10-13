@@ -27,11 +27,6 @@ An intelligent blog generation system that uses LangGraph workflows, LLM-based r
    python src/main.py
    ```
 
-4. **Run tests**:
-   ```bash
-   python test_workflow.py
-   ```
-
 ## Workflow Overview
 
 ```

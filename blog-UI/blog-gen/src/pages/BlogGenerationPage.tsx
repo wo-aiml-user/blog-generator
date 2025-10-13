@@ -318,29 +318,29 @@ export default function BlogGenerationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="glass border-b border-white/30">
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center shadow-lg hover-glow">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-500 rounded-lg flex items-center justify-center shadow-md">
               <Zap className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Blog Writer</h1>
+              <h1 className="text-xl font-bold text-slate-800">ContentRank</h1>
               <p className="text-xs text-slate-600 font-medium">Intelligent Content Creation</p>
             </div>
           </div>
           <div className="flex gap-4">
             <button
               onClick={() => navigate('/')}
-              className="px-5 py-2.5 text-indigo-600 font-medium hover:bg-indigo-50 rounded-xl transition-all duration-300 flex items-center gap-2"
+              className="px-5 py-2.5 text-slate-700 font-medium hover:bg-slate-100 rounded-lg transition-all duration-200 flex items-center gap-2"
             >
               <Home className="w-4 h-4" />
               Home
             </button>
             <button 
               onClick={handleCreateNewBlog}
-              className="px-6 py-2.5 gradient-blue text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 flex items-center gap-2 hover-glow"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2"
             >
               <Zap className="w-4 h-4" />
               Create Blog
@@ -350,40 +350,36 @@ export default function BlogGenerationPage() {
       </header>
 
       <main className="max-w-[1600px] mx-auto px-6 py-8">
-        <div className="mb-8 animate-fadeInUp">
-          <h2 className="text-4xl font-extrabold text-slate-900 mb-3">AI Blog Writer</h2>
-          <p className="text-lg text-slate-600">Create engaging blog posts with the power of artificial intelligence ✨</p>
-        </div>
 
         <div className="flex items-center justify-center gap-8 mb-10 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold shadow-lg transition-all duration-300 ${currentStep >= 1 ? 'gradient-blue text-white' : 'bg-slate-200 text-slate-500'}`}>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold shadow-sm transition-all duration-300 ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
               {currentStep > 1 ? <CheckCircle2 className="w-5 h-5" /> : '1'}
             </div>
-            <span className={`font-semibold ${currentStep >= 1 ? 'text-slate-900' : 'text-slate-500'}`}>Getting Started</span>
+            <span className={`font-semibold ${currentStep >= 1 ? 'text-slate-800' : 'text-slate-400'}`}>Getting Started</span>
           </div>
 
-          <div className={`h-1 w-24 rounded-full transition-all duration-500 ${currentStep >= 2 ? 'gradient-blue' : 'bg-slate-200'}`}></div>
+          <div className={`h-1 w-24 rounded-full transition-all duration-500 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
 
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold shadow-lg transition-all duration-300 ${currentStep >= 2 ? 'gradient-purple text-white' : 'bg-slate-200 text-slate-500'}`}>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold shadow-sm transition-all duration-300 ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
               {currentStep > 2 ? <CheckCircle2 className="w-5 h-5" /> : '2'}
             </div>
-            <span className={`font-semibold ${currentStep >= 2 ? 'text-slate-900' : 'text-slate-500'}`}>Generating Content</span>
+            <span className={`font-semibold ${currentStep >= 2 ? 'text-slate-800' : 'text-slate-400'}`}>Generating Content</span>
           </div>
 
-          <div className={`h-1 w-24 rounded-full transition-all duration-500 ${currentStep >= 3 ? 'gradient-primary' : 'bg-slate-200'}`}></div>
+          <div className={`h-1 w-24 rounded-full transition-all duration-500 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
 
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold shadow-lg transition-all duration-300 ${currentStep >= 3 ? 'gradient-primary text-white' : 'bg-slate-200 text-slate-500'}`}>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold shadow-sm transition-all duration-300 ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
               3
             </div>
-            <span className={`font-semibold ${currentStep >= 3 ? 'text-slate-900' : 'text-slate-500'}`}>Review & Refine</span>
+            <span className={`font-semibold ${currentStep >= 3 ? 'text-slate-800' : 'text-slate-400'}`}>Review & Refine</span>
           </div>
         </div>
 
         <div className="grid grid-cols-[420px,1fr] gap-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="glass rounded-2xl overflow-y-auto h-[800px] flex flex-col shadow-xl">
+          <div className="bg-white border border-slate-200 rounded-xl overflow-y-auto h-[800px] flex flex-col shadow-sm">
             {stage === 'form' ? (
               <BlogForm onGenerate={handleGenerate} loading={loading} />
             ) : (
@@ -399,7 +395,7 @@ export default function BlogGenerationPage() {
             )}
           </div>
 
-          <div className="glass rounded-2xl p-8 h-[800px] overflow-y-auto shadow-xl">
+          <div className="bg-white border border-slate-200 rounded-xl p-8 h-[800px] overflow-y-auto shadow-sm">
             <ContentDisplay
               stage={stage}
               loading={loading}

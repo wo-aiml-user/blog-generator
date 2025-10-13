@@ -271,10 +271,10 @@ export default function ContentDisplay({
   if (stage === 'form') {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center animate-fadeInUp">
-        <div className="w-24 h-24 gradient-blue rounded-3xl flex items-center justify-center mb-8 shadow-lg animate-float">
+        <div className="w-24 h-24 bg-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-md">
           <FileText className="w-12 h-12 text-white" />
         </div>
-        <h3 className="text-3xl font-bold text-slate-900 mb-4">Ready to Create?</h3>
+        <h3 className="text-3xl font-bold text-slate-800 mb-4">Ready to Create?</h3>
         <p className="text-slate-600 max-w-md">
           Your generated blog post content will appear here. Fill out the form on the left and
           click "Generate Blog Post" to get started.
@@ -287,7 +287,7 @@ export default function ContentDisplay({
     return (
       <div className="h-full flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-        <p className="text-slate-600 font-medium">Generating your content...</p>
+        <p className="text-slate-700 font-medium">Generating your content...</p>
       </div>
     );
   }
@@ -297,11 +297,11 @@ export default function ContentDisplay({
       <div className="overflow-y-auto max-h-full">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-slate-900">{outlines.title}</h2>
+            <h2 className="text-3xl font-bold text-slate-800">{outlines.title}</h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={copyOutlinesToClipboard}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 border-2 border-indigo-200 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
                 title="Copy outlines to clipboard"
               >
                 {copiedOutlines ? (
@@ -316,7 +316,7 @@ export default function ContentDisplay({
                   </>
                 )}
               </button>
-              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-4 py-2 rounded-full font-semibold shadow-sm">
+              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-4 py-2 rounded-full font-semibold border border-green-200">
                 <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                 <span>Generated</span>
               </div>
@@ -334,21 +334,21 @@ export default function ContentDisplay({
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-slate-900">Content Structure</h3>
+            <h3 className="text-lg font-semibold text-slate-800">Content Structure</h3>
           </div>
 
           <div className="space-y-4">
             {outlines.outlines.map((section, index) => (
               <div
                 key={index}
-                className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-slate-900 mb-2">{section.section}</h4>
+                    <h4 className="font-semibold text-slate-800 mb-2">{section.section}</h4>
                     <p className="text-sm text-slate-600 leading-relaxed">{section.description}</p>
                   </div>
                 </div>
@@ -365,11 +365,11 @@ export default function ContentDisplay({
       <div className="overflow-y-auto max-h-full">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-900">Draft Article</h2>
+            <h2 className="text-2xl font-bold text-slate-800">Draft Article</h2>
             <div className="flex items-center gap-3 text-sm">
               <button
                 onClick={copyDraftToClipboard}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 border-2 border-indigo-200 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
                 title="Copy article to clipboard"
               >
                 {copiedDraft ? (
@@ -401,11 +401,11 @@ export default function ContentDisplay({
                   </>
                 )}
               </button>
-              <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-full font-semibold shadow-sm">
+              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-4 py-2 rounded-full font-semibold border border-green-200">
                 <div className="w-2 h-2 bg-green-600 rounded-full"></div>
                 <span>Draft Ready</span>
               </div>
-              <div className="text-slate-500">~{draftArticle.content.split(/\s+/).length} words</div>
+              <div className="text-slate-600">~{draftArticle.content.split(/\s+/).length} words</div>
             </div>
           </div>
           <p className="text-sm text-slate-500">
@@ -450,8 +450,8 @@ export default function ContentDisplay({
         {draftArticle.citations && draftArticle.citations.length > 0 && (
           <div className="border-t border-slate-200 pt-6 mt-8">
             <div className="flex items-center gap-2 mb-4">
-              <BookOpen className="w-5 h-5 text-slate-600" />
-              <h3 className="text-lg font-semibold text-slate-900">References & Citations</h3>
+              <BookOpen className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-slate-800">References & Citations</h3>
             </div>
             <div className="space-y-3">
               {draftArticle.citations.map((citation, index) => (

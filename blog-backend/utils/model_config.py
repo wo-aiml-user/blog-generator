@@ -1,9 +1,9 @@
 import os
 import logging
-#from langchain_deepseek import ChatDeepSeek
+from langchain_deepseek import ChatDeepSeek
 #from langchain_anthropic import ChatAnthropic
 #from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_xai import ChatXAI
+#from langchain_xai import ChatXAI
 from google import genai
 from utils.prompts import image_prompt
 import base64
@@ -11,16 +11,17 @@ from langsmith import traceable
 from google.genai import types
 logger = logging.getLogger(__name__)
 
-""" def get_llm():
+def get_llm():
     ai_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not ai_api_key:
         raise ValueError("DEEPSEEK_API_KEY environment variable is required")
     logger.info(f"Initializing DeepSeek LLM: model='deepseek-reasoner'")
     llm = ChatDeepSeek(
         model="deepseek-chat",
         api_key=ai_api_key,
-        temperature=0.5,
+        temperature=0.6,
     )
-    return llm"""
+    return llm
 
 @traceable(name="generate_images", run_type="tool")
 def generate_images(title: str, tone: str, target_audience: str, number_of_images: int = 1, user_feedback: str = "", previous_image_bytes: bytes = None):
@@ -97,9 +98,9 @@ def generate_images(title: str, tone: str, target_audience: str, number_of_image
     google_api_key = os.getenv("GOOGLE_API_KEY")
     if not google_api_key:
         raise ValueError("GOOGLE_API_KEY environment variable is required")
-    logger.info(f"Initializing Google Generative AI LLM: model='gemini-2.5-flash'")
+    logger.info(f"Initializing Google Generative AI LLM: model='gemini-2.5-pro'")
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-pro",
         google_api_key=google_api_key,
         temperature=0.6,
     )
@@ -117,7 +118,7 @@ def generate_images(title: str, tone: str, target_audience: str, number_of_image
     )
     return llm"""
 
-def get_llm():
+"""def get_llm():
     ai_api_key = os.getenv("XAI_API_KEY")
     if not ai_api_key:
         raise ValueError("XAI_API_KEY environment variable is required")
@@ -127,4 +128,4 @@ def get_llm():
         api_key=ai_api_key,
         temperature=0.6,
     )
-    return llm
+    return llm"""
