@@ -12,3 +12,4 @@ python-multipart
 perplexityai
 langchain-xai
 pyshorteners
+langchain_deepseek
