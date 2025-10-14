@@ -7,6 +7,8 @@ import BlogForm from '../components/BlogForm';
 import ChatInterface from '../components/ChatInterface';
 import ContentDisplay from '../components/ContentDisplay';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
 type Stage = 'form' | 'outlines' | 'draft';
 
 interface OutlineSection {
@@ -123,7 +125,7 @@ export default function BlogGenerationPage() {
     setStatusMessage('Generating outlines...');
 
     try {
-      const response = await fetch('http://localhost:5000/generate', {
+      const response = await fetch(`${API_BASE_URL}/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,7 +202,7 @@ export default function BlogGenerationPage() {
     setStatusMessage('Regenerating image...');
 
     try {
-      const response = await fetch('http://localhost:5000/regenerate_image', {
+      const response = await fetch(`${API_BASE_URL}/regenerate_image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -258,7 +260,7 @@ export default function BlogGenerationPage() {
     setStatusMessage('Generating draft article...');
 
     try {
-      const response = await fetch('http://localhost:5000/user_input', {
+      const response = await fetch(`${API_BASE_URL}/user_input`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
