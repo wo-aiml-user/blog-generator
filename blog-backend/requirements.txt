@@ -13,3 +13,4 @@ perplexityai
 langchain-xai
 pyshorteners
 langchain_deepseek
+google-genai
