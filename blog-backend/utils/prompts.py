@@ -155,7 +155,6 @@ write_sections_prompt = PromptTemplate(
   - First H2 heading
   - First 100 words of introduction
   - 2-3 times in body (natural placement)
-  - Conclusion paragraph
 - Secondary keywords: 2-3 times each across relevant sections
 - LSI keywords: Natural semantic variations throughout
 - Avoid keyword stuffing: <2% density per keyword
@@ -214,7 +213,7 @@ When modifying (if user_input and previous_draft exist):
 You MUST respond with ONLY valid JSON in this exact format:
 {{
   "title": "Article Title",
-  "content": "Full article content in clean markdown format without any inline citations or URLs. Start with # title, then ## Introduction (The Hook), then follow all Main Body sections from the outline with ## headings (Recognition, Proof, Insight, Path Forward), and end with ## Conclusion (Momentum). The flow should naturally progress from hooking the reader → revealing the problem → building evidence → providing insight → offering solutions → creating momentum for action.",
+  "content": "Full article content in clean markdown format without any inline citations or URLs. Start with # title, then follow all sections from the outline with ## headings. The flow should naturally progress from hooking the reader → revealing the problem → building evidence → providing insight → offering solutions → creating momentum for action.",
   "citations": [
     {{"title": "Source Title", "url": "https://example.com", "relevance": "Specific information or data used from this source"}},
     {{"title": "Another Source", "url": "https://example2.com", "relevance": "How this source contributed to the article"}}
