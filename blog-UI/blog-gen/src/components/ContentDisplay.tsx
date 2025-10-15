@@ -71,23 +71,34 @@ function ArticleWithImage({
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
-    // Get all paragraphs
-    const paragraphs = tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6');
+    // Find the first h2 or h3 heading (after intro/title)
+    const headings = tempDiv.querySelectorAll('h2, h3');
+    let insertPoint: Element | null = null;
     
-    // Find the middle point (after ~40% of content)
-    const insertAfterIndex = Math.floor(paragraphs.length * 0.4);
+    if (headings.length > 0) {
+      // Insert image after the first major heading (h2/h3)
+      insertPoint = headings[0];
+    } else {
+      // If no h2/h3, look for paragraphs and insert after 2-3 paragraphs (intro section)
+      const paragraphs = tempDiv.querySelectorAll('p');
+      if (paragraphs.length >= 3) {
+        insertPoint = paragraphs[2]; // After 3rd paragraph
+      } else if (paragraphs.length >= 2) {
+        insertPoint = paragraphs[1]; // After 2nd paragraph
+      }
+    }
     
-    if (paragraphs.length > 3 && insertAfterIndex > 0) {
-      const insertPoint = paragraphs[insertAfterIndex];
-      
+    if (insertPoint) {
       // Split content at the insertion point
       const beforeContent: Node[] = [];
       const afterContent: Node[] = [];
       let foundInsertPoint = false;
       
       Array.from(tempDiv.childNodes).forEach((node) => {
-        if (node === insertPoint || foundInsertPoint) {
+        if (node === insertPoint) {
+          beforeContent.push(node.cloneNode(true));
           foundInsertPoint = true;
+        } else if (foundInsertPoint) {
           afterContent.push(node.cloneNode(true));
         } else {
           beforeContent.push(node.cloneNode(true));
@@ -104,7 +115,7 @@ function ArticleWithImage({
         after: afterDiv.innerHTML,
       });
     } else {
-      // If content is too short, put image at the end
+      // If no suitable insertion point, put image at the end
       setContentParts({
         before: htmlContent,
         after: '',

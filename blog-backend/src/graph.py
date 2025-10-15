@@ -5,8 +5,8 @@ from typing import Optional, List, Dict, Any
 import logging
 
 from src.nodes import (
-    generate_keywords_node,
     search_articles_citations_node,
+    extract_writing_style_node,
     generate_outlines_node,
     outline_router_node,
     write_sections_node,
@@ -35,6 +35,9 @@ class State(BaseModel):
     generated_images: Optional[List[str]] = None
     image_prompt: Optional[str] = ""
     image_count: Optional[int] = 0
+    reference_urls: Optional[List[str]] = None
+    custom_urls: Optional[List[str]] = None
+    writing_style: Optional[str] = ""
 
 def route_entry(state: State) -> str:
     """Entry point router that decides where to start based on current state."""
@@ -53,9 +56,9 @@ def route_entry(state: State) -> str:
             logger.info("[GRAPH] Routing to outline_router (feedback for outline)")
             return "outline_router"
     
-    if not state.keywords and state.topic:
-        logger.info("[GRAPH] Routing to generate_keywords (new workflow)")
-        return "generate_keywords"
+    if state.keywords and state.topic:
+        logger.info("[GRAPH] Routing to search (new workflow with user keywords)")
+        return "search"
     
     logger.info("[GRAPH] No action needed, ending")
     return "end"
@@ -74,8 +77,8 @@ def route_after_article(state: State) -> str:
 memory = MemorySaver()
 workflow = StateGraph(State)
 
-workflow.add_node("generate_keywords", generate_keywords_node)
 workflow.add_node("search", search_articles_citations_node)
+workflow.add_node("extract_writing_style", extract_writing_style_node)
 workflow.add_node("generate_outlines", generate_outlines_node)
 workflow.add_node("outline_router", outline_router_node)
 workflow.add_node("write_sections", write_sections_node)
@@ -85,15 +88,15 @@ workflow.add_node("article_router", article_router_node)
 workflow.set_conditional_entry_point(
     route_entry,
     {
-        "generate_keywords": "generate_keywords",
+        "search": "search",
         "outline_router": "outline_router",
         "article_router": "article_router",
         "end": END,
     },
 )
 
-workflow.add_edge("generate_keywords", "search")
-workflow.add_edge("search", "generate_outlines")
+workflow.add_edge("search", "extract_writing_style")
+workflow.add_edge("extract_writing_style", "generate_outlines")
 workflow.add_edge("generate_outlines", END) 
 
 workflow.add_edge("write_sections", "generate_images")

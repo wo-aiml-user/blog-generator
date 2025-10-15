@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 from perplexity import Perplexity
 import logging
+from langchain_community.document_loaders import WebBaseLoader
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ def _get_perplexity_client() -> Perplexity:
     return Perplexity(api_key=api_key)
 
 
-def perplexity_search(query: str, max_results: int = 2) -> List[Dict]:
+def perplexity_search(query: str, max_results: int = 1) -> List[Dict]:
     """
     Perform a Perplexity search for a single query.
     Returns a normalized list with title, url, content.
@@ -57,7 +58,7 @@ def perplexity_search(query: str, max_results: int = 2) -> List[Dict]:
         return []
 
 
-def search_articles(query: str, max_results: int = 2) -> List[Dict]:
+def search_articles(query: str, max_results: int = 1) -> List[Dict]:
     """
     Perform a single Perplexity search for the provided query/keywords and
     return up to max_results normalized items. No additional sorting is applied.
@@ -65,7 +66,7 @@ def search_articles(query: str, max_results: int = 2) -> List[Dict]:
     return perplexity_search(query=query, max_results=max_results)
 
 
-def search_articles_parallel(queries: List[str], max_results: int = 2) -> List[Dict]:
+def search_articles_parallel(queries: List[str], max_results: int = 1) -> List[Dict]:
     """
     Performs Perplexity search for each query separately and limits results per query.
     Returns max_results articles per query (total = len(queries) * max_results).
@@ -95,5 +96,31 @@ def search_articles_parallel(queries: List[str], max_results: int = 2) -> List[D
 
 def search_articles_and_citations(keywords: str) -> Tuple[List[Dict], List[Dict]]:
     logger.warning("search_articles_and_citations is deprecated; use search_articles instead.")
-    articles = search_articles(keywords, max_results=2)
+    articles = search_articles(keywords, max_results=1)
     return articles, []
+
+
+def load_content_from_urls(urls: List[str]) -> str:
+    """
+    Load content from a list of URLs using WebBaseLoader.
+    Returns concatenated content from all URLs with cleaned whitespace.
+    """
+    logger.info("[URL_LOADER] Loading content from %d URLs: %s", len(urls), urls)
+    
+    try:
+        loader = WebBaseLoader(urls)
+        documents = loader.load()
+        
+        content_parts = []
+        for doc in documents:
+            raw_content = doc.page_content
+            cleaned_content = ' '.join(raw_content.split())
+            content_parts.append(f"URL: {doc.metadata.get('source', 'Unknown')}\nContent: {cleaned_content}")
+        combined_content = "\n\n".join(content_parts)
+        
+        logger.info("[URL_LOADER] Successfully loaded %d documents, total length: %d chars", 
+                   len(documents), len(combined_content))
+        return combined_content
+    except Exception as e:
+        logger.error(f"[URL_LOADER] Failed to load URLs: {e}")
+        return ""

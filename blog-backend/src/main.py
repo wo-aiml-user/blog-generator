@@ -7,7 +7,7 @@ import os
 from logging.handlers import RotatingFileHandler
 from time import perf_counter
 from src.graph import app as graph_app
-from typing import Optional
+from typing import Optional, List
 from utils.model_config import generate_images
 import base64
 import re
@@ -47,10 +47,13 @@ app.add_middleware(
 class GenerateRequest(BaseModel):
     session_id: str
     topic: str
+    keywords: str
     tone: Optional[str] = None
     length: Optional[int] = None
     num_outlines: Optional[int] = None
     target_audience: Optional[str] = None
+    reference_urls: Optional[List[str]] = None
+    custom_urls: Optional[List[str]] = None
 
 class UserInputRequest(BaseModel):
     session_id: str
@@ -112,17 +115,20 @@ def generate(req: GenerateRequest):
     
     logger.info("="*100)
     logger.info("[API /generate] START | session_id=%s", req.session_id)
-    logger.info("[API /generate] Request - topic='%s', tone='%s', length='%s', num_outlines='%s', target_audience='%s'", 
-                req.topic, req.tone, req.length, req.num_outlines, req.target_audience)
+    logger.info("[API /generate] Request - topic='%s', keywords='%s', tone='%s', length='%s', num_outlines='%s', target_audience='%s', reference_urls=%s, custom_urls=%s", 
+                req.topic, req.keywords, req.tone, req.length, req.num_outlines, req.target_audience, req.reference_urls, req.custom_urls)
     
     try:
         graph_app.invoke(
             {
                 "topic": req.topic,
+                "keywords": req.keywords,
                 "tone": req.tone,
                 "length": req.length,
                 "num_outlines": req.num_outlines,
                 "target_audience": req.target_audience,
+                "reference_urls": req.reference_urls,
+                "custom_urls": req.custom_urls,
             },
             config=config,
         )

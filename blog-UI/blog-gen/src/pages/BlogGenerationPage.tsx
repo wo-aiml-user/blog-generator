@@ -118,7 +118,7 @@ export default function BlogGenerationPage() {
     return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
-  const handleGenerate = async (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number) => {
+  const handleGenerate = async (topic: string, tone: string, length: number, targetAudience: string, numOutlines: number, keywords: string, referenceUrls: string[], customUrls: string[]) => {
     setLoading(true);
     setStage('outlines');
     setCurrentStep(1);
@@ -137,6 +137,9 @@ export default function BlogGenerationPage() {
           length,
           target_audience: targetAudience,
           num_outlines: numOutlines,
+          keywords,
+          reference_urls: referenceUrls.length > 0 ? referenceUrls : null,
+          custom_urls: customUrls.length > 0 ? customUrls : null,
         }),
       });
 

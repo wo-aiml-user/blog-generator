@@ -1,48 +1,35 @@
 from langchain.prompts import PromptTemplate
 
-keyword_prompt = PromptTemplate(
-    input_variables=["topic"],
-    template="""You are an SEO strategist trained in RankBrain and semantic search.
-Given a topic, generate exactly three **high-intent, long-tail keyword phrases** that prioritize authoritative sources and user review signals.
-
-<topic>{topic}</topic>
-
-### Guidelines
-- Classify the **search intent** for this topic (informational, transactional, or navigational) and ensure all keywords align with that intent.
-- Each keyword should reflect **natural language phrasing** used by real users.
-- Include **semantic variants** and **entity-based keywords** (related concepts or questions RankBrain would associate with the topic).
-- Prioritize phrases that appear in:
-  * Government, educational (.gov, .edu), and industry authority sites
-  * User review platforms and community discussions (Reddit, Quora, forums)
-  * Expert blog commentary and case studies
-- Focus on **question-based keywords** that reveal user intent ("how does X work", "is X worth it", "X vs Y reviews")
-- Include **comparison and review modifiers** (best, top-rated, verified, expert-reviewed, user experience)
-- Avoid generic one-word terms.
-- Make sure to add one keywords to extract from community discussions.
-
-### Output (valid JSON only):
-{{
-  "keywords": ["keyword1", "keyword2", "keyword3"]
-}}
-"""
-)
-
 outlines_prompt = PromptTemplate(
-    input_variables=["keywords", "articles", "user_input", "previous_outline", "num_outlines"],
+    input_variables=["keywords", "articles", "user_input", "previous_outline", "num_outlines", "writing_style"],
     template="""Create a RankBrain-optimized article outline that maximizes user engagement and SERP visibility with authoritative data and expert quotes.
 
 <keywords>{keywords}</keywords>
 <articles>{articles}</articles>
 <previous_outline>{previous_outline}</previous_outline>
 <user_input>{user_input}</user_input>
+<writing_style>{writing_style}</writing_style>
 
 Create EXACTLY {num_outlines} sections.
 
-### RankBrain Signals to Maximize
-- Dwell Time: Progressive value delivery keeps readers engaged
-- Low Bounce: Answer queries comprehensively 
-- CTR: Compelling titles/H2s that stand out in SERPs
-- Scroll Depth: Structure encourages full-page reading
+### Writing Style Guidelines
+- If <writing_style> is provided, consider the writing style when structuring sections and descriptions.
+- Ensure section titles and descriptions align with the specified tone and approach.
+- If no writing_style is provided, follow general best practices.
+
+
+### RankBrain Success Metrics
+**Engagement Signals:**
+- Dwell Time Target: 4-6 minutes (300-400 words per minute reading speed)
+- Bounce Rate: <40% (comprehensive query satisfaction)
+- Scroll Depth: 70%+ (compelling section progression)
+- CTR: 5-8% above category average
+**Quality Indicators:**
+- Topical Authority: Cover semantic cluster comprehensively
+- Content Freshness: Include recent data, trends, developments
+- User Intent Match: Address informational, navigational, transactional needs
+- EEAT Signals: Expertise, Experience, Authoritativeness, Trustworthiness
+
 
 ### Content Flow Framework
 Distribute these 6 elements *throughout* the {num_outlines} sections.
@@ -53,22 +40,32 @@ Distribute these 6 elements *throughout* the {num_outlines} sections.
 **Path Forward** - Actionable strategies (with success metrics)
 **Momentum** - Reinforce takeaways, inspire action
 
-### Enhanced Requirements
-- **Statistical Tables**: Include 1-2 sections that will feature data tables (comparison charts, before/after metrics, industry benchmarks)
-- **Expert Quotes**: Mark 2-3 sections that should incorporate authoritative quotes from industry leaders, researchers, or verified practitioners
-- **User Insights**: Identify 1-2 sections for real user experiences, reviews, or community feedback
-- **Data Visualization**: Note which sections benefit from presenting data in table format vs. narrative
+### Featured Snippet Optimization
+Designate 2-3 sections for featured snippet targeting:
+- **Definition Boxes**: 40-60 word precise definitions
+- **Numbered Lists**: 5-8 step processes with action verbs
+- **Comparison Tables**: Side-by-side feature/benefit analysis
+- **FAQ Format**: Question as H3, direct answer in first 2-3 sentences
 
-### Optimization Requirements
-- Title: Include primary keyword naturally, promise specific value
-- Sections: CTR-optimized titles using power words, numbers, curiosity gaps
-- Include 1+ section formatted for featured snippet (definition, list, comparison, FAQ, steps)
-- Cover full semantic field: what, why, how, when, who, where
-- Address related questions to reduce follow-up searches
-- Use engagement triggers: curiosity gaps, pattern interrupts
-- Show expertise through firsthand experience signals
+### SEO Semantic Clustering
+Each section should address related query clusters:
+- Primary intent keyword (main topic)
+- 2-3 secondary keywords (variations, related terms)
+- Long-tail questions (what, why, how, when, where, who)
+- People Also Ask (PAA) queries
+- Related searches from SERP analysis
+
 
 ### Section Creation (for each of {num_outlines} sections)
+### Quality Checkpoints
+- Keyword Density: Primary 1-2%, secondary 0.5-1% per section
+- Readability: Flesch 60-70, Grade Level 8-10
+- Sentence Variety: 40% short (<15 words), 40% medium (15-25), 20% long (>25)
+- Active Voice: 75%+ of sentences
+- Transition Quality: Every section connects logically to next
+- Subheading Power: Each H2/H3 promises specific value
+
+### Title and Description
 - Compelling, descriptive title (NOT generic labels like "Introduction" or "Conclusion")
 - 2-3 sentence description covering:
   * What's included
@@ -95,28 +92,41 @@ You MUST respond with ONLY valid JSON in this exact format:
 )
 
 write_sections_prompt = PromptTemplate(
-    input_variables=["tone", "length", "target_audience", "title","outlines","web_content", "user_input", "previous_draft"],
-    template="""Write a #1-ranking article optimized for RankBrain satisfaction signals with authoritative data, expert quotes, and user insights.
+    input_variables=["tone", "length", "target_audience", "keywords", "title","outlines","web_content", "user_input", "previous_draft", "writing_style"],
+    template="""Write a #1-ranking article optimized for RankBrain, EEAT signals, and maximum user engagement.
 
 <tone>{tone}</tone>
 <length>{length}</length>
 <target_audience>{target_audience}</target_audience>
+<keywords>{keywords}</keywords>
 <title>{title}</title>
 <outlines>{outlines}</outlines>
 <web_content>{web_content}</web_content>
 <previous_draft>{previous_draft}</previous_draft>
 <user_input>{user_input}</user_input>
+<writing_style>{writing_style}</writing_style>
 
-### RankBrain Success Targets
-1. Dwell Time: 3+ minutes (engaging content)
-2. Low Bounce: Complete query answer prevents return-to-search
-3. CTR: Outperform competitor meta titles/descriptions
-4. Authority Signals: Expert quotes, statistical tables, user reviews
+### RankBrain Performance Targets
+**Engagement Metrics:**
+- Dwell Time: 4-6 minutes (compelling, progressive value delivery)
+- Bounce Rate: <35% (immediate value, clear path forward)
+- Scroll Depth: 75%+ (curiosity loops, strategic subheadings)
+- Return Visits: 15%+ (bookmark-worthy, comprehensive)
+
+### Writing Style Guidelines
+- If <writing_style> is provided, STRICTLY follow the writing style characteristics described.
+- Match the tone, sentence structure, vocabulary level, and formatting preferences from the reference style.
+- Maintain consistency with the perspective and engagement techniques specified.
+- If no writing_style is provided, follow the <tone> parameter and general best practices.
 
 ### Article Structure
+**Quality Signals:**
+- Helpful Content Score: 8+/10 (unique insights, actionable advice)
+- EEAT: Expert authorship signals, first-hand experience, authoritative sources
+- Freshness: Recent data (last 12 months), current examples, updated best practices
+- Comprehensiveness: Answer all related queries, address objections, provide context
 - Use the exact section titles from the <outlines> as your ## headings.
 - Write content for each <outlines> section based on the <web_content>.
-- Incorporate content_type indicators from outlines (DATA TABLE, EXPERT QUOTE, USER REVIEW).
 
 ### Enhanced Content Elements
 
@@ -138,16 +148,43 @@ write_sections_prompt = PromptTemplate(
 - Aggregate common themes from multiple reviews
 - Format user quotes distinctly (e.g., italics with "— Username, Platform")
 
-### SEO Optimization
-**Keywords**: Primary 3-5x (title, H2, intro, body, conclusion), secondary 2-3x each, LSI naturally
-**Featured Snippets**: 40-60 word definitions, numbered steps, comparison tables, direct question answers, contextualized statistics
-**EEAT**: Firsthand examples, authoritative sources (in citations), acknowledge limitations, current data, deep analysis, original insights, expert validation
+### SEO Optimization Matrix
+**Keyword Integration:**
+- Primary keyword: 
+  - Title (beginning preferred)
+  - First H2 heading
+  - First 100 words of introduction
+  - 2-3 times in body (natural placement)
+  - Conclusion paragraph
+- Secondary keywords: 2-3 times each across relevant sections
+- LSI keywords: Natural semantic variations throughout
+- Avoid keyword stuffing: <2% density per keyword
 
-### Writing Quality
-**Readability**: Flesch 60-70, sentences 15-20 words avg (5-30 range), paragraphs 2-4 sentences, 80% active voice, varied transitions
-**Engagement**: Hook in first 100 words, subheadings promise quick wins, curiosity loops, varied paragraph length, strategic lists/bold, smooth transitions, "you" language, layered proof
-**Depth**: Answer "5 Whys", explain what+why, provide context, address objections, share what doesn't work, real-world connections
-**Authority**: Back claims with data, include expert perspectives, acknowledge multiple viewpoints, cite authoritative sources
+
+### Writing Quality Standards
+**Readability (Flesch Score 60-70):**
+- Average sentence length: 15-20 words
+- Sentence variety: 40% short (<15), 40% medium (15-25), 20% long (>25)
+- Paragraph length: 2-4 sentences (max 5 lines on mobile)
+- Active voice: 80%+ of sentences
+- Transition words: 30% of paragraphs start with transition
+- Grade level: 8-10 (accessible to broad audience)
+
+**Engagement Architecture:**
+- **Curiosity Loops**: End sections with question or teaser for next section
+- **Pattern Interrupts**: Vary paragraph length every 3-4 paragraphs
+- **Visual Breaks**: Subheadings every 300-400 words
+- **Scannability**: Bold 1-2 key phrases per section, use bullets/numbers
+- **Personal Connection**: Use "you" language (3-5 times per section)
+- **Specificity**: Replace vague terms with concrete details (numbers, names, examples)
+
+**Depth & Authority:**
+- Answer "5 Whys": Explain root causes, not just surface symptoms
+- Provide context: History, evolution, current state, future trends
+- Show expertise: First-hand experience, original research, unique data
+- Acknowledge limitations: What doesn't work, when to avoid, edge cases
+- Multiple perspectives: Balance pros/cons, different approaches
+- Practical wisdom: Hard-won insights beyond obvious advice
 
 ### Formatting
 - Markdown: # title, ## sections, ### subsections
@@ -243,5 +280,31 @@ Technical Specifications:
 - Sharp focus on main subject
 - Professional color grading
 - Suitable for web publication"""
+)
+
+writing_style_prompt = PromptTemplate(
+    input_variables=["reference_content"],
+    template="""Analyze the following content from reference URLs and extract the writing style characteristics.
+
+<reference_content>
+{reference_content}
+</reference_content>
+
+## Instructions:
+Analyze the writing style and provide a comprehensive description covering:
+
+**Tone & Voice**: (e.g., formal, casual, conversational, authoritative, friendly, technical)
+**Sentence Structure**: (e.g., short and punchy, long and descriptive, varied, complex)
+**Vocabulary Level**: (e.g., simple, technical, academic, industry-specific jargon)
+**Paragraph Style**: (e.g., brief, detailed, uses transitions, direct)
+**Engagement Techniques**: (e.g., questions, storytelling, examples, data-driven, anecdotes)
+**Formatting Preferences**: (e.g., bullet points, numbered lists, subheadings, bold emphasis)
+**Perspective**: (e.g., first-person, second-person, third-person)
+**Unique Characteristics**: Any distinctive patterns or stylistic choices
+
+You MUST respond with ONLY valid JSON in this exact format:
+{{
+  "summary": "A concise 3-4 sentence summary of the overall writing style that can be used as guidance"
+}}"""
 )
 

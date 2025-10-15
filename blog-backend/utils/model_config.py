@@ -51,7 +51,7 @@ def generate_images(title: str, tone: str, target_audience: str, number_of_image
         tone=tone,
         target_audience=target_audience
     )
-    
+
     try:
         client = genai.Client(api_key=google_api_key)
         
