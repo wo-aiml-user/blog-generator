@@ -36,7 +36,7 @@ export default function ChatInterface({
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-slate-200 bg-slate-50">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xl font-bold text-slate-800">AI Assistant</h3>
+          <h3 className="text-xl font-bold text-slate-800" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>AI Assistant</h3>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-xs text-slate-600 font-semibold">Online</span>

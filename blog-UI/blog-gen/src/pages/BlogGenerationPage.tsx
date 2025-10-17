@@ -331,7 +331,7 @@ export default function BlogGenerationPage() {
               <Zap className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800">ContentRank</h1>
+              <h1 className="text-xl font-bold text-slate-800" style={{ fontFamily: "'Patrick Hand SC', cursive" }}>ContentRank</h1>
               <p className="text-xs text-slate-600 font-medium">Intelligent Content Creation</p>
             </div>
           </div>
