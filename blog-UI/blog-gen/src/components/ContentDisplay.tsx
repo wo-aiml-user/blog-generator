@@ -1,4 +1,4 @@
-import { FileText, Loader2, BookOpen, Copy, Check, Edit3, Save, Image as ImageIcon } from 'lucide-react';
+import { FileText, Loader2, BookOpen, Copy, Check, Edit3, Save, Image as ImageIcon, Download, ChevronDown } from 'lucide-react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -214,6 +214,7 @@ export default function ContentDisplay({
   const [imageEditMode, setImageEditMode] = useState(false);
   const [imageFeedback, setImageFeedback] = useState('');
   const [isRegeneratingImage, setIsRegeneratingImage] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const articleContentRef = useRef<HTMLDivElement>(null);
 
   // Configure marked options
@@ -245,9 +246,9 @@ export default function ContentDisplay({
 
   const copyDraftToClipboard = () => {
     if (!draftArticle) return;
-    
+
     let text = draftArticle.content;
-    
+
     if (draftArticle.citations && draftArticle.citations.length > 0) {
       text += '\n\n---\n\nReferences:\n';
       draftArticle.citations.forEach((citation, index) => {
@@ -258,11 +259,96 @@ export default function ContentDisplay({
         text += '\n';
       });
     }
-    
+
     navigator.clipboard.writeText(text).then(() => {
       setCopiedDraft(true);
       setTimeout(() => setCopiedDraft(false), 2000);
     });
+  };
+
+  const downloadAsMarkdown = () => {
+    if (!draftArticle) return;
+
+    let content = draftArticle.content;
+
+    if (draftArticle.citations && draftArticle.citations.length > 0) {
+      content += '\n\n---\n\nReferences:\n';
+      draftArticle.citations.forEach((citation, index) => {
+        content += `[${index + 1}] ${citation.title}\n${citation.url}\n`;
+        if (citation.relevance) {
+          content += `${citation.relevance}\n`;
+        }
+        content += '\n';
+      });
+    }
+
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${draftArticle.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAsHTML = () => {
+    if (!draftArticle) return;
+
+    // Use marked to convert markdown to HTML
+    const htmlContent = marked.parse(draftArticle.content) as string;
+
+    // Add citations if they exist
+    let fullContent = htmlContent;
+    if (draftArticle.citations && draftArticle.citations.length > 0) {
+      fullContent += '<hr><h3>References:</h3><ol>';
+      draftArticle.citations.forEach((citation, index) => {
+        fullContent += `<li><a href="${citation.url}" target="_blank" rel="noopener noreferrer">${citation.title}</a>`;
+        if (citation.relevance) {
+          fullContent += `<br><small>${citation.relevance}</small>`;
+        }
+        fullContent += '</li>';
+      });
+      fullContent += '</ol>';
+    }
+
+    const fullHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${draftArticle.title}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        h1, h2, h3 { color: #333; }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        img { max-width: 100%; height: auto; border-radius: 8px; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { background: #f1f3f4; padding: 2px 4px; border-radius: 3px; font-family: 'Courier New', monospace; }
+        blockquote { border-left: 4px solid #ddd; margin: 0; padding-left: 15px; color: #666; }
+        ul, ol { padding-left: 20px; }
+        hr { border: none; border-top: 1px solid #eee; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    ${fullContent}
+</body>
+</html>`;
+
+    const blob = new Blob([fullHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${draftArticle.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleImageRegenerate = async () => {
@@ -395,6 +481,39 @@ export default function ContentDisplay({
                   </>
                 )}
               </button>
+              <div className="relative download-menu">
+                <button
+                  onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-all"
+                  title="Download options"
+                >
+                  <Download className="w-4 h-4" />
+                  {/* <span>Download</span> */}
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                {showDownloadMenu && (
+                  <div className="absolute top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                    <button
+                      onClick={() => {
+                        downloadAsMarkdown();
+                        setShowDownloadMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 transition-colors first:rounded-t-lg"
+                    >
+                      Markdown (.md)
+                    </button>
+                    <button
+                      onClick={() => {
+                        downloadAsHTML();
+                        setShowDownloadMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors last:rounded-b-lg"
+                    >
+                      HTML (.html)
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => setEditMode(!editMode)}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-colors"
